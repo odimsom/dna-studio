@@ -3,11 +3,11 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "BrandForge — AI Marketing Platform",
+  title: "DNA Studio — AI Marketing Platform",
   description:
     "Self-hosted AI marketing platform. Extract Brand DNA from any website and generate on-brand content for every social platform.",
   openGraph: {
-    title: "BrandForge — AI Marketing Platform",
+    title: "DNA Studio — AI Marketing Platform",
     description:
       "Like Google Pomelli, but open source, model-agnostic, and actually ships to your social media.",
     type: "website",

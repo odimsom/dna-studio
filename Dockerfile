@@ -1,13 +1,14 @@
 FROM node:20-alpine AS base
 
-# Install dependencies for Playwright
+# Install dependencies for Playwright and Prisma
 RUN apk add --no-cache \
     chromium \
     nss \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont
+    ttf-freefont \
+    openssl
 
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
@@ -16,6 +17,7 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
+COPY prisma ./prisma
 RUN npm ci
 
 # ---- Build ----
@@ -27,8 +29,8 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-# ---- Production ----
-FROM base AS runner
+# ---- App Production ----
+FROM base AS app
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -43,6 +45,11 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/playwright ./node_modules/playwright
+COPY --from=builder /app/node_modules/playwright-core ./node_modules/playwright-core
+
+RUN chown -R nextjs:nodejs node_modules/@prisma node_modules/prisma
 
 USER nextjs
 
@@ -50,4 +57,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node server.js"]

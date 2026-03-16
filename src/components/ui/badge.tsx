@@ -2,23 +2,23 @@ import { cn } from "@/lib/utils";
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: "default" | "success" | "warning" | "danger" | "primary";
+  variant?: "default" | "success" | "warning" | "danger" | "accent";
   className?: string;
 }
 
 export function Badge({ children, variant = "default", className }: BadgeProps) {
   const variants = {
     default: "bg-card text-muted border-border",
-    success: "bg-success/15 text-success border-success/30",
-    warning: "bg-warning/15 text-warning border-warning/30",
-    danger: "bg-danger/15 text-danger border-danger/30",
-    primary: "bg-primary/15 text-primary border-primary/30",
+    success: "bg-success/10 text-success border-success/20",
+    warning: "bg-warning/10 text-warning border-warning/20",
+    danger: "bg-danger/10 text-danger border-danger/20",
+    accent: "bg-accent-muted text-accent border-accent/20",
   };
 
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium border",
+        "inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium border",
         variants[variant],
         className
       )}

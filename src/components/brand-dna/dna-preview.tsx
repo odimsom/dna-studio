@@ -2,10 +2,9 @@
 
 import { motion } from "framer-motion";
 import { ColorSwatch } from "@/components/ui/color-swatch";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import type { BrandDNA } from "@/lib/brand-dna/types";
-import { Globe, Type, Users, Sparkles } from "lucide-react";
+import { Link as LinkIcon } from "lucide-react";
 
 interface DNAPreviewProps {
   dna: BrandDNA;
@@ -19,102 +18,87 @@ export function DNAPreview({ dna }: DNAPreviewProps) {
       transition={{ duration: 0.5 }}
       className="space-y-6"
     >
-      {/* Header */}
-      <Card className="border-primary/30">
-        <div className="flex items-center gap-4 mb-4">
+      {/* Brand identity header */}
+      <Card className="p-8">
+        <div className="flex items-start gap-5">
           {dna.logoUrl ? (
             <img
               src={dna.logoUrl}
               alt={dna.name}
-              className="w-16 h-16 rounded-xl object-cover bg-white"
+              className="w-16 h-16 rounded-xl object-cover bg-white flex-shrink-0"
             />
           ) : (
-            <div className="w-16 h-16 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl">
+            <div className="w-16 h-16 rounded-xl bg-accent/20 flex items-center justify-center text-accent font-bold text-2xl font-[family-name:var(--font-heading)] flex-shrink-0">
               {dna.name.charAt(0)}
             </div>
           )}
-          <div>
-            <h2 className="text-2xl font-bold font-[family-name:var(--font-heading)]">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-2xl font-[family-name:var(--font-heading)] italic">
               {dna.name}
             </h2>
-            <p className="text-muted text-sm flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5" />
+            <a
+              href={dna.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted hover:text-accent transition-colors flex items-center gap-1.5 mt-1"
+            >
+              <LinkIcon className="w-3 h-3" />
               {dna.url}
-            </p>
+            </a>
             {dna.tagline && (
-              <p className="text-sm text-foreground/70 mt-1">{dna.tagline}</p>
+              <p className="text-sm text-foreground/60 mt-2">{dna.tagline}</p>
             )}
           </div>
         </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="primary">{dna.industry}</Badge>
-          <Badge>{dna.category}</Badge>
-          {dna.keywords.slice(0, 3).map((kw) => (
-            <Badge key={kw}>{kw}</Badge>
-          ))}
-        </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Colors */}
-        <Card>
-          <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            Brand Colors
-          </h3>
-          <div className="flex flex-wrap gap-3">
+        <Card className="p-8">
+          <h3 className="text-sm font-medium text-muted mb-6">Colors</h3>
+          <div className="flex flex-wrap gap-6">
             {dna.colors.map((color) => (
-              <div key={color.hex} className="text-center">
-                <ColorSwatch
-                  color={color.hex}
-                  size="lg"
-                />
-                <p className="text-xs text-muted mt-1">{color.name}</p>
-                <p className="text-[10px] text-muted/60">{color.hex}</p>
+              <div key={color.hex} className="flex flex-col items-center gap-2">
+                <ColorSwatch color={color.hex} size="lg" />
+                <span className="text-xs text-muted font-mono">{color.hex}</span>
               </div>
             ))}
           </div>
         </Card>
 
         {/* Fonts */}
-        <Card>
-          <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Type className="w-4 h-4 text-primary" />
-            Typography
-          </h3>
-          <div className="space-y-3">
+        <Card className="p-8">
+          <h3 className="text-sm font-medium text-muted mb-6">Fonts</h3>
+          <div className="space-y-6">
             {dna.fonts.map((font) => (
-              <div
-                key={font.family}
-                className="flex items-center justify-between"
-              >
-                <span
-                  className="text-lg text-foreground"
-                  style={{ fontFamily: font.family }}
-                >
-                  {font.family}
-                </span>
-                <Badge>{font.usage}</Badge>
+              <div key={font.family}>
+                <div className="flex items-baseline justify-between mb-1">
+                  <span
+                    className="text-3xl text-foreground/80"
+                    style={{ fontFamily: font.family }}
+                  >
+                    Aa
+                  </span>
+                  <span className="text-xs text-muted capitalize">{font.usage}</span>
+                </div>
+                <p className="text-sm text-foreground/60">{font.family}</p>
               </div>
             ))}
           </div>
         </Card>
 
-        {/* Tone */}
-        <Card>
-          <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            Tone of Voice
-          </h3>
-          <div className="flex gap-2 mb-4">
-            <Badge variant="primary">{dna.tone.primary}</Badge>
-            <Badge>{dna.tone.secondary}</Badge>
+        {/* Tone of Voice */}
+        <Card className="p-8">
+          <h3 className="text-sm font-medium text-muted mb-6">Tone of Voice</h3>
+          <div className="flex gap-2 mb-5">
+            <span className="text-sm text-accent font-medium">{dna.tone.primary}</span>
+            <span className="text-sm text-muted">/</span>
+            <span className="text-sm text-foreground/60">{dna.tone.secondary}</span>
           </div>
-          <p className="text-sm text-foreground/70 mb-4">
+          <p className="text-sm text-foreground/50 mb-6 leading-relaxed">
             {dna.tone.description}
           </p>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <ToneMeter label="Formality" value={dna.tone.formality} />
             <ToneMeter label="Energy" value={dna.tone.energy} />
             <ToneMeter label="Warmth" value={dna.tone.warmth} />
@@ -122,35 +106,64 @@ export function DNAPreview({ dna }: DNAPreviewProps) {
         </Card>
 
         {/* Audience */}
-        <Card>
-          <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Users className="w-4 h-4 text-primary" />
-            Target Audience
-          </h3>
-          <div className="space-y-3">
+        <Card className="p-8">
+          <h3 className="text-sm font-medium text-muted mb-6">Target Audience</h3>
+          <div className="space-y-5">
             <div>
-              <span className="text-xs text-muted">Primary</span>
-              <p className="text-sm font-medium">{dna.audience.primary}</p>
+              <span className="text-[11px] uppercase tracking-wider text-muted/60">Primary</span>
+              <p className="text-sm font-medium mt-0.5">{dna.audience.primary}</p>
             </div>
             <div>
-              <span className="text-xs text-muted">Secondary</span>
-              <p className="text-sm font-medium">{dna.audience.secondary}</p>
+              <span className="text-[11px] uppercase tracking-wider text-muted/60">Secondary</span>
+              <p className="text-sm font-medium mt-0.5">{dna.audience.secondary}</p>
             </div>
             <div>
-              <span className="text-xs text-muted">Age Range</span>
-              <p className="text-sm font-medium">{dna.audience.ageRange}</p>
+              <span className="text-[11px] uppercase tracking-wider text-muted/60">Age Range</span>
+              <p className="text-sm font-medium mt-0.5">{dna.audience.ageRange}</p>
             </div>
             <div>
-              <span className="text-xs text-muted">Interests</span>
-              <div className="flex flex-wrap gap-1.5 mt-1">
+              <span className="text-[11px] uppercase tracking-wider text-muted/60">Interests</span>
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
                 {dna.audience.interests.map((interest) => (
-                  <Badge key={interest}>{interest}</Badge>
+                  <span
+                    key={interest}
+                    className="text-xs text-foreground/60 bg-card-hover px-2 py-0.5 rounded"
+                  >
+                    {interest}
+                  </span>
                 ))}
               </div>
             </div>
           </div>
         </Card>
       </div>
+
+      {/* Keywords + Industry */}
+      <Card className="p-8">
+        <div className="flex flex-wrap gap-x-8 gap-y-4">
+          <div>
+            <span className="text-[11px] uppercase tracking-wider text-muted/60">Industry</span>
+            <p className="text-sm font-medium mt-0.5">{dna.industry}</p>
+          </div>
+          <div>
+            <span className="text-[11px] uppercase tracking-wider text-muted/60">Category</span>
+            <p className="text-sm font-medium mt-0.5">{dna.category}</p>
+          </div>
+          <div className="flex-1 min-w-[200px]">
+            <span className="text-[11px] uppercase tracking-wider text-muted/60">Keywords</span>
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
+              {dna.keywords.map((kw) => (
+                <span
+                  key={kw}
+                  className="text-xs text-foreground/60 bg-card-hover px-2 py-0.5 rounded"
+                >
+                  {kw}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Card>
     </motion.div>
   );
 }
@@ -158,13 +171,13 @@ export function DNAPreview({ dna }: DNAPreviewProps) {
 function ToneMeter({ label, value }: { label: string; value: number }) {
   return (
     <div>
-      <div className="flex justify-between text-xs mb-1">
-        <span className="text-muted">{label}</span>
-        <span className="text-foreground">{value}%</span>
+      <div className="flex justify-between text-xs mb-1.5">
+        <span className="text-muted/70">{label}</span>
+        <span className="text-foreground/50 font-mono">{value}%</span>
       </div>
-      <div className="h-1.5 bg-border rounded-full overflow-hidden">
+      <div className="h-1 bg-border rounded-full overflow-hidden">
         <motion.div
-          className="h-full bg-primary rounded-full"
+          className="h-full bg-accent rounded-full"
           initial={{ width: 0 }}
           animate={{ width: `${value}%` }}
           transition={{ duration: 1, ease: "easeOut" }}

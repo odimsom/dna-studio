@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import {
   Megaphone,
@@ -15,6 +14,9 @@ import {
   Facebook,
   Twitter,
   Loader2,
+  Sparkles,
+  Image as ImageIcon,
+  RatioIcon,
 } from "lucide-react";
 
 interface Brand {
@@ -25,15 +27,18 @@ interface Brand {
 }
 
 const platforms = [
-  { id: "instagram", label: "Instagram", icon: Instagram, color: "from-pink-500 to-purple-600" },
-  { id: "linkedin", label: "LinkedIn", icon: Linkedin, color: "from-blue-600 to-blue-700" },
-  { id: "facebook", label: "Facebook", icon: Facebook, color: "from-blue-500 to-blue-600" },
-  { id: "twitter", label: "X / Twitter", icon: Twitter, color: "from-sky-400 to-sky-500" },
+  { id: "instagram", label: "Instagram", icon: Instagram },
+  { id: "linkedin", label: "LinkedIn", icon: Linkedin },
+  { id: "facebook", label: "Facebook", icon: Facebook },
+  { id: "twitter", label: "X", icon: Twitter },
 ];
 
-const languages = [
-  "English", "Spanish", "French", "German", "Arabic", "Chinese",
-  "Japanese", "Portuguese", "Hindi", "Korean", "Italian", "Dutch",
+const suggestions = [
+  "Launch a new product announcement campaign",
+  "Promote a seasonal sale with urgency",
+  "Build brand awareness and grow followers",
+  "Share a customer success story",
+  "Announce a company milestone or update",
 ];
 
 export default function NewCampaignPage() {
@@ -64,9 +69,13 @@ function NewCampaignContent() {
     fetch("/api/brands")
       .then((r) => r.json())
       .then((data) => {
-        setBrands(Array.isArray(data) ? data : []);
+        const list = Array.isArray(data) ? data : [];
+        setBrands(list);
+        if (!preselectedBrandId && list.length > 0) {
+          setBrandId(list[0].id);
+        }
       });
-  }, []);
+  }, [preselectedBrandId]);
 
   const togglePlatform = (id: string) => {
     setSelectedPlatforms((prev) =>
@@ -126,9 +135,11 @@ function NewCampaignContent() {
     }
   }, [brandId, goal, selectedPlatforms, language, router]);
 
+  const activeBrand = brands.find((b) => b.id === brandId);
+
   return (
     <AppShell>
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <AnimatePresence mode="wait">
           {!generating ? (
             <motion.div
@@ -136,122 +147,123 @@ function NewCampaignContent() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="space-y-8"
             >
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-6">
-                  <Megaphone className="w-8 h-8 text-primary" />
-                </div>
-                <h1 className="text-3xl font-bold font-[family-name:var(--font-heading)] mb-2">
-                  Create Campaign
+              {/* Header */}
+              <div className="text-center mb-10">
+                <Megaphone className="w-6 h-6 text-accent mx-auto mb-4" />
+                <h1 className="text-3xl font-[family-name:var(--font-heading)] italic mb-2">
+                  Campaigns
                 </h1>
-                <p className="text-muted">
-                  Generate on-brand content for your social platforms.
+                <p className="text-sm text-muted">
+                  Start from our suggestions or prompt to create a new campaign.
                 </p>
               </div>
 
-              <Card className="p-8 space-y-6">
-                {/* Brand selector */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-muted">
-                    Brand
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {brands.map((brand) => (
-                      <button
-                        key={brand.id}
-                        onClick={() => setBrandId(brand.id)}
-                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
-                          brandId === brand.id
-                            ? "border-primary bg-primary/10"
-                            : "border-border bg-card hover:bg-card-hover"
-                        }`}
-                      >
-                        {brand.logoUrl ? (
-                          <img
-                            src={brand.logoUrl}
-                            alt={brand.name}
-                            className="w-8 h-8 rounded-lg object-cover bg-white"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary text-sm font-bold">
-                            {brand.name.charAt(0)}
-                          </div>
-                        )}
-                        <span className="text-sm font-medium">{brand.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Goal */}
-                <Input
-                  id="goal"
-                  label="Campaign Goal"
+              {/* Natural language input */}
+              <Card className="p-6 mb-8">
+                <textarea
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
-                  placeholder='e.g., "Promote summer sale", "Announce new product", "Grow followers"'
+                  placeholder="Describe the campaign you want to create"
+                  className="w-full bg-transparent text-foreground placeholder:text-muted/30 focus:outline-none resize-none text-base min-h-[60px]"
+                  rows={2}
                 />
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                  <div className="flex gap-2">
+                    {/* Brand selector pill */}
+                    {activeBrand && (
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-border text-xs">
+                        <div
+                          className="w-3.5 h-3.5 rounded-sm flex-shrink-0"
+                          style={{
+                            backgroundColor: activeBrand.colors[0] || "#C9A96E",
+                          }}
+                        />
+                        {activeBrand.name}
+                      </div>
+                    )}
 
-                {/* Platforms */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-muted">
-                    Platforms
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {platforms.map((platform) => (
+                    {/* Platform pills */}
+                    {platforms.map((p) => (
                       <button
-                        key={platform.id}
-                        onClick={() => togglePlatform(platform.id)}
-                        className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
-                          selectedPlatforms.includes(platform.id)
-                            ? "border-primary bg-primary/10"
-                            : "border-border bg-card hover:bg-card-hover"
+                        key={p.id}
+                        onClick={() => togglePlatform(p.id)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer border ${
+                          selectedPlatforms.includes(p.id)
+                            ? "bg-accent-muted border-accent/20 text-accent"
+                            : "bg-surface border-border text-muted hover:text-foreground"
                         }`}
                       >
-                        <div
-                          className={`w-8 h-8 rounded-lg bg-gradient-to-br ${platform.color} flex items-center justify-center`}
-                        >
-                          <platform.icon className="w-4 h-4 text-white" />
-                        </div>
-                        <span className="text-sm font-medium">
-                          {platform.label}
-                        </span>
+                        <p.icon className="w-3 h-3" />
+                        {p.label}
                       </button>
                     ))}
                   </div>
-                </div>
 
-                {/* Language */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-muted">
-                    Language
-                  </label>
+                  <Button
+                    size="sm"
+                    onClick={handleGenerate}
+                    disabled={!brandId || !goal || selectedPlatforms.length === 0}
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Generate
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Suggestions */}
+              <div className="mb-10">
+                <h3 className="text-sm font-medium text-muted mb-4">
+                  Suggestions based on Business DNA
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {suggestions.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      onClick={() => setGoal(suggestion)}
+                      className="text-left px-4 py-3 rounded-lg border border-border bg-card hover:bg-card-hover hover:border-accent/20 transition-all text-sm text-foreground/70 cursor-pointer"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Settings row */}
+              <div className="flex items-center gap-4">
+                {brands.length > 1 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted">Brand:</span>
+                    <select
+                      value={brandId}
+                      onChange={(e) => setBrandId(e.target.value)}
+                      className="text-xs bg-surface border border-border rounded-lg px-3 py-1.5 text-foreground focus:outline-none"
+                    >
+                      {brands.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted">Language:</span>
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full rounded-xl border border-border bg-card px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    className="text-xs bg-surface border border-border rounded-lg px-3 py-1.5 text-foreground focus:outline-none"
                   >
-                    {languages.map((lang) => (
-                      <option key={lang} value={lang}>
-                        {lang}
-                      </option>
-                    ))}
+                    {["English", "Spanish", "French", "German", "Arabic", "Chinese", "Japanese", "Portuguese", "Hindi", "Korean"].map(
+                      (lang) => (
+                        <option key={lang} value={lang}>
+                          {lang}
+                        </option>
+                      )
+                    )}
                   </select>
                 </div>
-
-                <Button
-                  size="lg"
-                  className="w-full"
-                  onClick={handleGenerate}
-                  disabled={
-                    !brandId || !goal || selectedPlatforms.length === 0
-                  }
-                >
-                  Generate Campaign
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Card>
+              </div>
             </motion.div>
           ) : (
             <motion.div
@@ -261,18 +273,18 @@ function NewCampaignContent() {
               className="space-y-6"
             >
               <div className="text-center">
-                <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto mb-4" />
-                <h2 className="text-xl font-bold font-[family-name:var(--font-heading)] mb-2">
-                  Generating Campaign
+                <Loader2 className="w-6 h-6 text-accent animate-spin mx-auto mb-4" />
+                <h2 className="text-xl font-[family-name:var(--font-heading)] italic mb-2">
+                  Creating your campaign
                 </h2>
-                <p className="text-muted text-sm">
-                  Creating on-brand content for {selectedPlatforms.length}{" "}
+                <p className="text-sm text-muted">
+                  Generating content for {selectedPlatforms.length}{" "}
                   platform{selectedPlatforms.length !== 1 ? "s" : ""}...
                 </p>
               </div>
 
               <Card className="p-6 max-h-[400px] overflow-y-auto">
-                <pre className="text-xs text-muted whitespace-pre-wrap font-mono">
+                <pre className="text-xs text-muted whitespace-pre-wrap font-mono leading-relaxed">
                   {streamContent || "Starting generation..."}
                 </pre>
               </Card>

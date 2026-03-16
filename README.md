@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="public/logo.svg" alt="BrandForge" width="80" />
+  <img src="public/logo.svg" alt="DNA Studio" width="80" />
 </p>
 
-<h1 align="center">BrandForge</h1>
+<h1 align="center">DNA Studio</h1>
 
 <p align="center">
   <strong>Self-hosted AI marketing platform. Like Google Pomelli, but open source, model-agnostic, and actually ships to your social media.</strong>
@@ -25,14 +25,14 @@
 
 ---
 
-## What is BrandForge?
+## What is DNA Studio?
 
-BrandForge analyzes any website URL to extract a **Brand DNA** profile — colors, fonts, tone of voice, target audience, and industry — then uses AI to generate on-brand marketing content across all major social platforms.
+DNA Studio analyzes any website URL to extract a **Brand DNA** profile — colors, fonts, tone of voice, target audience, and industry — then uses AI to generate on-brand marketing content across all major social platforms.
 
 **Paste a URL. Get a complete marketing campaign. Publish it.**
 
 <!-- Demo GIF placeholder: Record a screen capture of the Brand DNA extraction flow -->
-<!-- ![BrandForge Demo](public/demo.gif) -->
+<!-- ![DNA Studio Demo](public/demo.gif) -->
 
 ## Features
 
@@ -56,8 +56,8 @@ BrandForge analyzes any website URL to extract a **Brand DNA** profile — color
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-org/brandforge.git
-cd brandforge
+git clone https://github.com/moesaif/dna-studio.git
+cd dna-studio
 
 # Copy environment config
 cp .env.example .env
@@ -107,7 +107,7 @@ All configuration is done via environment variables. See [`.env.example`](.env.e
 
 ## Comparison
 
-| Feature | BrandForge | Google Pomelli | Canva AI |
+| Feature | DNA Studio | Google Pomelli | Canva AI |
 |---------|:----------:|:--------------:|:--------:|
 | Self-hosted | Yes | No | No |
 | Model-agnostic | Yes | No | No |
@@ -132,7 +132,7 @@ All configuration is done via environment variables. See [`.env.example`](.env.e
 ## Project Structure
 
 ```
-brandforge/
+dna-studio/
 ├── src/
 │   ├── app/            # Next.js pages and API routes
 │   ├── components/     # React components

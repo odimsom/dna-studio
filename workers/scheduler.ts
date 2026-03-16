@@ -112,4 +112,4 @@ worker.on("failed", (job, err) => {
   console.error(`Job ${job?.id} failed:`, err.message);
 });
 
-console.log("BrandForge worker started. Waiting for jobs...");
+console.log("DNA Studio worker started. Waiting for jobs...");

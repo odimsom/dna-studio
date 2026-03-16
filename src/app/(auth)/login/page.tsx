@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Zap } from "lucide-react";
+import { Dna } from "lucide-react";
 
 export default function LoginPage() {
   return (
@@ -49,13 +49,13 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-4">
-            <Zap className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center mx-auto mb-4">
+            <Dna className="w-5 h-5 text-background" />
           </div>
-          <h1 className="text-2xl font-bold font-[family-name:var(--font-heading)]">
+          <h1 className="text-2xl font-[family-name:var(--font-heading)] italic">
             Welcome back
           </h1>
-          <p className="text-sm text-muted mt-1">Sign in to BrandForge</p>
+          <p className="text-xs text-muted mt-1">Sign in to DNA Studio</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -85,7 +85,6 @@ function LoginForm() {
           <Button
             type="submit"
             className="w-full"
-            size="lg"
             loading={loading}
           >
             Sign In
@@ -118,9 +117,9 @@ function LoginForm() {
           Continue with Google
         </Button>
 
-        <p className="text-sm text-center text-muted">
+        <p className="text-xs text-center text-muted">
           Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-primary hover:underline">
+          <Link href="/register" className="text-accent hover:underline">
             Sign up
           </Link>
         </p>

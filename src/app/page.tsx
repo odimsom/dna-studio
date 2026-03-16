@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
-  Zap,
+  Dna,
   Globe,
   Palette,
   Megaphone,
-  Send,
   Github,
   ArrowRight,
   Check,
   Sparkles,
+  Camera,
 } from "lucide-react";
 
 const features = [
@@ -36,10 +36,10 @@ const features = [
       "Generate platform-specific content for Instagram, LinkedIn, Facebook, and X — all at once.",
   },
   {
-    icon: Send,
-    title: "Direct Publishing",
+    icon: Camera,
+    title: "AI Photoshoot",
     description:
-      "Connect your social accounts and publish or schedule posts directly from BrandForge.",
+      "Generate professional product shots and on-brand visuals without a traditional photoshoot.",
   },
   {
     icon: Sparkles,
@@ -48,7 +48,7 @@ const features = [
       "Generate content in any language. Perfect for global brands and multilingual campaigns.",
   },
   {
-    icon: Zap,
+    icon: Dna,
     title: "Self-Hosted",
     description:
       "One command to deploy. Your data stays yours. No vendor lock-in. MIT licensed.",
@@ -56,14 +56,14 @@ const features = [
 ];
 
 const comparison = [
-  { feature: "Self-hosted", brandforge: true, pomelli: false, canva: false },
-  { feature: "Model-agnostic", brandforge: true, pomelli: false, canva: false },
-  { feature: "Brand DNA extraction", brandforge: true, pomelli: true, canva: false },
-  { feature: "Multi-platform generation", brandforge: true, pomelli: true, canva: true },
-  { feature: "Direct social publishing", brandforge: true, pomelli: false, canva: true },
-  { feature: "Multi-language", brandforge: true, pomelli: false, canva: true },
-  { feature: "Open source", brandforge: true, pomelli: false, canva: false },
-  { feature: "Free tier", brandforge: true, pomelli: false, canva: true },
+  { feature: "Self-hosted", dnaStudio: true, pomelli: false, canva: false },
+  { feature: "Model-agnostic", dnaStudio: true, pomelli: false, canva: false },
+  { feature: "Brand DNA extraction", dnaStudio: true, pomelli: true, canva: false },
+  { feature: "Multi-platform generation", dnaStudio: true, pomelli: true, canva: true },
+  { feature: "AI Photoshoot", dnaStudio: true, pomelli: true, canva: false },
+  { feature: "Multi-language", dnaStudio: true, pomelli: false, canva: true },
+  { feature: "Open source", dnaStudio: true, pomelli: false, canva: false },
+  { feature: "Free tier", dnaStudio: true, pomelli: false, canva: true },
 ];
 
 export default function LandingPage() {
@@ -74,20 +74,20 @@ export default function LandingPage() {
     <div className="min-h-screen">
       {/* Nav */}
       <nav className="fixed top-0 w-full z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
+        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center">
+              <Dna className="w-3.5 h-3.5 text-background" />
             </div>
-            <span className="text-lg font-bold tracking-tight">BrandForge</span>
+            <span className="text-sm font-semibold tracking-tight">DNA Studio</span>
           </div>
           <div className="flex items-center gap-3">
             <a
               href="https://github.com"
-              className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
+              className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors"
             >
-              <Github className="w-4 h-4" />
-              Star on GitHub
+              <Github className="w-3.5 h-3.5" />
+              Star
             </a>
             <Button size="sm" onClick={() => router.push("/login")}>
               Get Started
@@ -97,27 +97,27 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="pt-32 pb-24 px-6">
+        <div className="max-w-3xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm mb-8">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent/20 bg-accent-muted text-accent text-xs mb-8">
+              <Sparkles className="w-3 h-3" />
               Open Source AI Marketing Platform
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold font-[family-name:var(--font-heading)] leading-[1.1] tracking-tight mb-6">
+            <h1 className="text-5xl md:text-7xl font-[family-name:var(--font-heading)] italic leading-[1.1] tracking-tight mb-6">
               Your Brand.{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">
+              <span className="text-accent">
                 Everywhere.
               </span>{" "}
               Instantly.
             </h1>
 
-            <p className="text-lg text-muted max-w-2xl mx-auto mb-10">
+            <p className="text-base text-muted max-w-xl mx-auto mb-10 leading-relaxed">
               Extract your Brand DNA from any website. Generate on-brand content
               for every social platform. Publish directly. Self-hosted, model-agnostic,
               and open source.
@@ -131,7 +131,7 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="max-w-xl mx-auto"
           >
-            <div className="flex gap-2 p-2 rounded-2xl border border-border bg-card">
+            <div className="flex gap-2 p-2 rounded-xl border border-border bg-card">
               <div className="flex-1 flex items-center gap-3 px-4">
                 <Globe className="w-4 h-4 text-muted" />
                 <input
@@ -139,7 +139,7 @@ export default function LandingPage() {
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="https://your-website.com"
-                  className="w-full bg-transparent text-foreground placeholder:text-muted/40 focus:outline-none text-sm"
+                  className="w-full bg-transparent text-foreground placeholder:text-muted/30 focus:outline-none text-sm"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && url) {
                       router.push(`/login?redirect=/brands/new&url=${encodeURIComponent(url)}`);
@@ -156,7 +156,7 @@ export default function LandingPage() {
                 disabled={!url}
               >
                 Analyze Brand
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </div>
           </motion.div>
@@ -164,33 +164,31 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="py-20 px-6 border-t border-border/50">
-        <div className="max-w-6xl mx-auto">
+      <section className="py-24 px-6 border-t border-border/50">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold font-[family-name:var(--font-heading)] mb-4">
+            <h2 className="text-3xl font-[family-name:var(--font-heading)] italic mb-3">
               Everything you need for AI-powered marketing
             </h2>
-            <p className="text-muted max-w-2xl mx-auto">
+            <p className="text-sm text-muted max-w-lg mx-auto">
               From brand analysis to content generation to direct publishing —
               all in one self-hosted platform.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map((feature, i) => (
               <motion.div
                 key={feature.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.4 }}
-                className="p-6 rounded-2xl border border-border bg-card/50 hover:bg-card hover:border-primary/20 transition-all duration-300"
+                transition={{ delay: i * 0.08, duration: 0.4 }}
+                className="p-6 rounded-xl border border-border bg-card/50 hover:bg-card hover:border-accent/15 transition-all duration-300"
               >
-                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center mb-4">
-                  <feature.icon className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                <p className="text-sm text-muted">{feature.description}</p>
+                <feature.icon className="w-5 h-5 text-accent mb-4" />
+                <h3 className="text-sm font-semibold mb-1.5">{feature.title}</h3>
+                <p className="text-xs text-muted leading-relaxed">{feature.description}</p>
               </motion.div>
             ))}
           </div>
@@ -198,28 +196,28 @@ export default function LandingPage() {
       </section>
 
       {/* Comparison */}
-      <section className="py-20 px-6 border-t border-border/50">
-        <div className="max-w-4xl mx-auto">
+      <section className="py-24 px-6 border-t border-border/50">
+        <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold font-[family-name:var(--font-heading)] mb-4">
-              How BrandForge compares
+            <h2 className="text-3xl font-[family-name:var(--font-heading)] italic mb-3">
+              How DNA Studio compares
             </h2>
           </div>
 
-          <div className="rounded-2xl border border-border overflow-hidden">
+          <div className="rounded-xl border border-border overflow-hidden">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-card">
-                  <th className="text-left px-6 py-4 text-sm font-medium text-muted">
+                  <th className="text-left px-5 py-3 text-xs font-medium text-muted">
                     Feature
                   </th>
-                  <th className="px-6 py-4 text-sm font-medium text-primary">
-                    BrandForge
+                  <th className="px-5 py-3 text-xs font-medium text-accent">
+                    DNA Studio
                   </th>
-                  <th className="px-6 py-4 text-sm font-medium text-muted">
+                  <th className="px-5 py-3 text-xs font-medium text-muted">
                     Pomelli
                   </th>
-                  <th className="px-6 py-4 text-sm font-medium text-muted">
+                  <th className="px-5 py-3 text-xs font-medium text-muted">
                     Canva AI
                   </th>
                 </tr>
@@ -230,26 +228,26 @@ export default function LandingPage() {
                     key={row.feature}
                     className="border-b border-border/50 last:border-0"
                   >
-                    <td className="px-6 py-3 text-sm">{row.feature}</td>
-                    <td className="px-6 py-3 text-center">
-                      {row.brandforge ? (
-                        <Check className="w-4 h-4 text-success mx-auto" />
+                    <td className="px-5 py-3 text-xs">{row.feature}</td>
+                    <td className="px-5 py-3 text-center">
+                      {row.dnaStudio ? (
+                        <Check className="w-3.5 h-3.5 text-success mx-auto" />
                       ) : (
-                        <span className="text-muted/30">&mdash;</span>
+                        <span className="text-muted/20">&mdash;</span>
                       )}
                     </td>
-                    <td className="px-6 py-3 text-center">
+                    <td className="px-5 py-3 text-center">
                       {row.pomelli ? (
-                        <Check className="w-4 h-4 text-muted mx-auto" />
+                        <Check className="w-3.5 h-3.5 text-muted/50 mx-auto" />
                       ) : (
-                        <span className="text-muted/30">&mdash;</span>
+                        <span className="text-muted/20">&mdash;</span>
                       )}
                     </td>
-                    <td className="px-6 py-3 text-center">
+                    <td className="px-5 py-3 text-center">
                       {row.canva ? (
-                        <Check className="w-4 h-4 text-muted mx-auto" />
+                        <Check className="w-3.5 h-3.5 text-muted/50 mx-auto" />
                       ) : (
-                        <span className="text-muted/30">&mdash;</span>
+                        <span className="text-muted/20">&mdash;</span>
                       )}
                     </td>
                   </tr>
@@ -261,32 +259,32 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-6 border-t border-border/50">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold font-[family-name:var(--font-heading)] mb-6">
-            Ready to forge your brand?
+      <section className="py-24 px-6 border-t border-border/50">
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="text-3xl font-[family-name:var(--font-heading)] italic mb-4">
+            Ready to decode your brand?
           </h2>
-          <p className="text-muted mb-8 max-w-xl mx-auto">
-            Deploy BrandForge in one command. Self-hosted, open source, and free forever.
+          <p className="text-sm text-muted mb-8 max-w-md mx-auto">
+            Deploy DNA Studio in one command. Self-hosted, open source, and free forever.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <div className="bg-card border border-border rounded-xl px-6 py-3 font-mono text-sm text-foreground">
+            <div className="bg-card border border-border rounded-lg px-5 py-2.5 font-mono text-xs text-foreground/70">
               docker compose up -d
             </div>
-            <Button size="lg" onClick={() => router.push("/login")}>
+            <Button onClick={() => router.push("/login")}>
               Get Started Free
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-8 px-6">
-        <div className="max-w-6xl mx-auto flex items-center justify-between text-sm text-muted">
-          <div className="flex items-center gap-2">
-            <Zap className="w-3.5 h-3.5 text-primary" />
-            BrandForge
+      <footer className="border-t border-border/50 py-6 px-6">
+        <div className="max-w-5xl mx-auto flex items-center justify-between text-xs text-muted">
+          <div className="flex items-center gap-1.5">
+            <Dna className="w-3 h-3 text-accent" />
+            DNA Studio
           </div>
           <p>MIT License</p>
         </div>

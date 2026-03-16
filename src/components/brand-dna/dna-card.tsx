@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { ColorPalette } from "@/components/ui/color-swatch";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ExternalLink, Megaphone } from "lucide-react";
+import { ExternalLink, Megaphone, ArrowRight } from "lucide-react";
 
 interface BrandCardProps {
   brand: {
@@ -23,8 +22,8 @@ interface BrandCardProps {
 export function BrandCard({ brand }: BrandCardProps) {
   return (
     <Link href={`/brands/${brand.id}`}>
-      <Card className="hover:border-primary/30 hover:bg-card-hover group cursor-pointer">
-        <div className="flex items-start justify-between mb-4">
+      <Card className="hover:border-accent/20 hover:bg-card-hover group cursor-pointer">
+        <div className="flex items-start justify-between mb-5">
           <div className="flex items-center gap-3">
             {brand.logoUrl ? (
               <img
@@ -33,36 +32,45 @@ export function BrandCard({ brand }: BrandCardProps) {
                 className="w-10 h-10 rounded-lg object-cover bg-white"
               />
             ) : (
-              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold"
+                style={{
+                  backgroundColor: brand.colors[0] || "#C9A96E",
+                  color: "#111",
+                }}
+              >
                 {brand.name.charAt(0)}
               </div>
             )}
             <div>
-              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+              <h3 className="font-medium text-foreground group-hover:text-accent transition-colors">
                 {brand.name}
               </h3>
               <p className="text-xs text-muted flex items-center gap-1">
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="w-2.5 h-2.5" />
                 {new URL(brand.url).hostname}
               </p>
             </div>
           </div>
+          <ArrowRight className="w-4 h-4 text-muted/30 group-hover:text-accent transition-colors" />
         </div>
 
         <ColorPalette colors={brand.colors.slice(0, 5)} size="sm" />
 
-        <div className="flex flex-wrap gap-1.5 mt-4">
-          <Badge variant="primary">{brand.tone}</Badge>
-          <Badge>{brand.industry}</Badge>
+        <div className="flex items-center gap-3 mt-4 text-xs text-muted">
+          <span>{brand.industry}</span>
+          <span className="text-border">|</span>
+          <span>{brand.tone}</span>
+          {brand._count && (
+            <>
+              <span className="text-border">|</span>
+              <span className="flex items-center gap-1">
+                <Megaphone className="w-3 h-3" />
+                {brand._count.campaigns}
+              </span>
+            </>
+          )}
         </div>
-
-        {brand._count && (
-          <div className="flex items-center gap-1.5 mt-4 text-xs text-muted">
-            <Megaphone className="w-3.5 h-3.5" />
-            {brand._count.campaigns} campaign
-            {brand._count.campaigns !== 1 ? "s" : ""}
-          </div>
-        )}
       </Card>
     </Link>
   );

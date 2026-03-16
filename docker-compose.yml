@@ -2,11 +2,13 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgresql://brandforge:brandforge@db:5432/brandforge
+      DATABASE_URL: postgresql://dnastudio:dnastudio@db:5432/dnastudio
       REDIS_URL: redis://redis:6379
       NEXTAUTH_URL: http://localhost:3000
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-in-production}
@@ -14,7 +16,11 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     depends_on:
@@ -25,10 +31,11 @@ services:
     restart: unless-stopped
 
   worker:
-    build: .
-    command: node dist/workers/scheduler.js
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
     environment:
-      DATABASE_URL: postgresql://brandforge:brandforge@db:5432/brandforge
+      DATABASE_URL: postgresql://dnastudio:dnastudio@db:5432/dnastudio
       REDIS_URL: redis://redis:6379
       LLM_PROVIDER: ${LLM_PROVIDER:-openai}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -45,13 +52,13 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: brandforge
-      POSTGRES_USER: brandforge
-      POSTGRES_PASSWORD: brandforge
+      POSTGRES_DB: dnastudio
+      POSTGRES_USER: dnastudio
+      POSTGRES_PASSWORD: dnastudio
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U brandforge"]
+      test: ["CMD-SHELL", "pg_isready -U dnastudio"]
       interval: 5s
       timeout: 5s
       retries: 5

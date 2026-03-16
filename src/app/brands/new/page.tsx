@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { AnalysisProgress } from "@/components/brand-dna/analysis-progress";
 import { DNAPreview } from "@/components/brand-dna/dna-preview";
 import type { BrandDNA, CrawlProgress } from "@/lib/brand-dna/types";
-import { Globe, ArrowRight, Sparkles } from "lucide-react";
+import { Globe, ArrowRight, Dna } from "lucide-react";
 
 type Phase = "input" | "analyzing" | "preview";
 
@@ -101,40 +101,37 @@ function NewBrandContent() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="space-y-8"
             >
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-6">
-                  <Sparkles className="w-8 h-8 text-primary" />
-                </div>
-                <h1 className="text-3xl font-bold font-[family-name:var(--font-heading)] mb-2">
+              <div className="text-center mb-10">
+                <Dna className="w-6 h-6 text-accent mx-auto mb-4" />
+                <h1 className="text-3xl font-[family-name:var(--font-heading)] italic mb-2">
                   Extract Brand DNA
                 </h1>
-                <p className="text-muted">
+                <p className="text-sm text-muted max-w-md mx-auto">
                   Enter a website URL and we&apos;ll analyze everything — colors,
                   fonts, tone, audience, and more.
                 </p>
               </div>
 
-              <Card className="p-8">
+              <Card className="p-6">
                 <div className="flex gap-3">
-                  <div className="flex-1 flex items-center gap-3 px-5 py-3 rounded-xl border border-border bg-background">
-                    <Globe className="w-5 h-5 text-muted flex-shrink-0" />
+                  <div className="flex-1 flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-surface">
+                    <Globe className="w-4 h-4 text-muted flex-shrink-0" />
                     <input
                       type="url"
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
                       placeholder="https://example.com"
-                      className="w-full bg-transparent text-foreground placeholder:text-muted/40 focus:outline-none"
+                      className="w-full bg-transparent text-foreground placeholder:text-muted/30 focus:outline-none text-sm"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleAnalyze();
                       }}
                       autoFocus
                     />
                   </div>
-                  <Button size="lg" onClick={handleAnalyze} disabled={!url}>
+                  <Button onClick={handleAnalyze} disabled={!url}>
                     Analyze
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </div>
 
@@ -153,13 +150,12 @@ function NewBrandContent() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="space-y-8"
             >
-              <div className="text-center">
-                <h1 className="text-2xl font-bold font-[family-name:var(--font-heading)] mb-2">
+              <div className="text-center mb-8">
+                <h1 className="text-2xl font-[family-name:var(--font-heading)] italic mb-2">
                   Analyzing Brand DNA
                 </h1>
-                <p className="text-muted text-sm">{url}</p>
+                <p className="text-xs text-muted">{url}</p>
               </div>
 
               <Card className="p-8">
@@ -177,10 +173,10 @@ function NewBrandContent() {
               className="space-y-6"
             >
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold font-[family-name:var(--font-heading)] mb-2">
+                <h1 className="text-2xl font-[family-name:var(--font-heading)] italic mb-2">
                   Brand DNA Extracted
                 </h1>
-                <p className="text-muted text-sm">
+                <p className="text-xs text-muted">
                   Review the analysis below. You can edit these values later.
                 </p>
               </div>
@@ -198,11 +194,10 @@ function NewBrandContent() {
                   Start Over
                 </Button>
                 <Button
-                  size="lg"
                   onClick={() => router.push(`/brands/${brandId}`)}
                 >
-                  Looks Good, Continue
-                  <ArrowRight className="w-4 h-4" />
+                  Looks Good
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
               </div>
             </motion.div>

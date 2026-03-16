@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Instagram,
@@ -15,7 +14,7 @@ import {
   Edit3,
   Check,
   X,
-  Image as ImageIcon,
+  MoreVertical,
 } from "lucide-react";
 
 interface AssetCardProps {
@@ -42,18 +41,11 @@ const platformIcons: Record<string, React.ComponentType<{ className?: string }>>
   twitter: Twitter,
 };
 
-const platformColors: Record<string, string> = {
-  instagram: "from-pink-500 to-purple-600",
-  linkedin: "from-blue-600 to-blue-700",
-  facebook: "from-blue-500 to-blue-600",
-  twitter: "from-sky-400 to-sky-500",
-};
-
-const statusVariants: Record<string, "default" | "success" | "warning" | "danger" | "primary"> = {
-  draft: "default",
-  scheduled: "warning",
-  published: "success",
-  failed: "danger",
+const statusStyles: Record<string, string> = {
+  draft: "text-muted",
+  scheduled: "text-warning",
+  published: "text-success",
+  failed: "text-danger",
 };
 
 export function AssetCard({
@@ -66,6 +58,7 @@ export function AssetCard({
   const [caption, setCaption] = useState(asset.caption);
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
+  const [showMenu, setShowMenu] = useState(false);
 
   const Icon = platformIcons[asset.platform] || Send;
 
@@ -80,38 +73,65 @@ export function AssetCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className="overflow-hidden">
-        {/* Platform header */}
-        <div
-          className={`bg-gradient-to-r ${platformColors[asset.platform] || "from-gray-500 to-gray-600"} px-4 py-2 -mx-6 -mt-6 mb-4 flex items-center justify-between`}
-        >
-          <div className="flex items-center gap-2 text-white">
-            <Icon className="w-4 h-4" />
-            <span className="text-sm font-medium capitalize">
-              {asset.platform}
-            </span>
+      <Card className="overflow-hidden p-0">
+        {/* Visual creative area */}
+        <div className="relative aspect-[4/5] bg-gradient-to-br from-card-hover to-card flex items-center justify-center p-8">
+          {/* Platform badge */}
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded bg-background/60 backdrop-blur-sm">
+            <Icon className="w-3 h-3 text-foreground/70" />
+            <span className="text-[10px] text-foreground/70 capitalize">{asset.platform}</span>
           </div>
-          <Badge variant={statusVariants[asset.status]}>{asset.status}</Badge>
+
+          {/* Status */}
+          <div className="absolute top-3 right-3 flex items-center gap-1.5">
+            <span className={`text-[10px] capitalize ${statusStyles[asset.status]}`}>
+              {asset.status}
+            </span>
+            {asset.status === "draft" && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="p-1 rounded hover:bg-background/40 transition-colors cursor-pointer"
+                >
+                  <MoreVertical className="w-3.5 h-3.5 text-muted" />
+                </button>
+                {showMenu && (
+                  <div className="absolute right-0 top-full mt-1 w-36 rounded-lg border border-border bg-card shadow-xl shadow-black/30 overflow-hidden z-10">
+                    <button
+                      onClick={() => { onPublish?.(asset.id); setShowMenu(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-card-hover cursor-pointer"
+                    >
+                      <Send className="w-3 h-3" />
+                      Publish Now
+                    </button>
+                    <button
+                      onClick={() => { setShowScheduler(true); setShowMenu(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-card-hover cursor-pointer"
+                    >
+                      <Calendar className="w-3 h-3" />
+                      Schedule
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Caption preview as text overlay */}
+          <p className="text-center text-lg font-semibold leading-snug text-foreground/90 max-w-[90%]">
+            {caption.split("\n")[0]?.slice(0, 80)}
+            {caption.length > 80 ? "..." : ""}
+          </p>
         </div>
 
-        {/* Image placeholder */}
-        {asset.imagePrompt && (
-          <div className="bg-border/30 rounded-xl p-4 mb-4 flex items-center gap-3">
-            <ImageIcon className="w-5 h-5 text-muted" />
-            <p className="text-xs text-muted line-clamp-2">
-              {asset.imagePrompt}
-            </p>
-          </div>
-        )}
-
-        {/* Caption */}
-        <div className="mb-4">
+        {/* Caption + actions */}
+        <div className="p-4">
           {editing ? (
             <div className="space-y-2">
               <textarea
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl p-3 text-sm text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full bg-surface border border-border rounded-lg p-3 text-sm text-foreground resize-none focus:outline-none focus:border-accent/30"
                 rows={4}
               />
               <div className="flex gap-2">
@@ -128,81 +148,59 @@ export function AssetCard({
                   }}
                 >
                   <X className="w-3 h-3" />
-                  Cancel
                 </Button>
               </div>
             </div>
           ) : (
             <div className="group relative">
-              <p className="text-sm text-foreground/85 whitespace-pre-line">
+              <p className="text-sm text-foreground/70 line-clamp-3">
                 {asset.caption}
               </p>
               <button
                 onClick={() => setEditing(true)}
-                className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg hover:bg-card-hover cursor-pointer"
+                className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-card-hover cursor-pointer"
               >
-                <Edit3 className="w-3.5 h-3.5 text-muted" />
+                <Edit3 className="w-3 h-3 text-muted" />
               </button>
             </div>
           )}
+
+          {/* Hashtags */}
+          {asset.hashtags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {asset.hashtags.slice(0, 5).map((tag) => (
+                <span key={tag} className="text-[11px] text-accent/70">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {showScheduler && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mt-3 flex gap-2"
+            >
+              <input
+                type="datetime-local"
+                value={scheduleDate}
+                onChange={(e) => setScheduleDate(e.target.value)}
+                className="flex-1 bg-surface border border-border rounded-lg px-3 py-1.5 text-xs text-foreground"
+              />
+              <Button
+                size="sm"
+                disabled={!scheduleDate}
+                onClick={() => {
+                  onSchedule?.(asset.id, new Date(scheduleDate).toISOString());
+                  setShowScheduler(false);
+                }}
+              >
+                Confirm
+              </Button>
+            </motion.div>
+          )}
         </div>
-
-        {/* Hashtags */}
-        {asset.hashtags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {asset.hashtags.map((tag) => (
-              <span key={tag} className="text-xs text-primary">
-                #{tag}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Actions */}
-        {asset.status === "draft" && (
-          <div className="flex gap-2 pt-2 border-t border-border">
-            <Button
-              size="sm"
-              onClick={() => onPublish?.(asset.id)}
-            >
-              <Send className="w-3 h-3" />
-              Publish Now
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => setShowScheduler(!showScheduler)}
-            >
-              <Calendar className="w-3 h-3" />
-              Schedule
-            </Button>
-          </div>
-        )}
-
-        {showScheduler && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="mt-3 flex gap-2"
-          >
-            <input
-              type="datetime-local"
-              value={scheduleDate}
-              onChange={(e) => setScheduleDate(e.target.value)}
-              className="flex-1 bg-background border border-border rounded-lg px-3 py-1.5 text-sm text-foreground"
-            />
-            <Button
-              size="sm"
-              disabled={!scheduleDate}
-              onClick={() => {
-                onSchedule?.(asset.id, new Date(scheduleDate).toISOString());
-                setShowScheduler(false);
-              }}
-            >
-              Confirm
-            </Button>
-          </motion.div>
-        )}
       </Card>
     </motion.div>
   );

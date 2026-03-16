@@ -1,0 +1,17 @@
+FROM node:20-alpine
+
+RUN apk add --no-cache openssl
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma
+RUN npm ci
+
+COPY tsconfig.json ./
+COPY workers ./workers
+COPY src/lib ./src/lib
+
+RUN npx prisma generate
+
+CMD ["npx", "tsx", "workers/scheduler.ts"]

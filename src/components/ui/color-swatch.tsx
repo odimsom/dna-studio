@@ -9,28 +9,25 @@ interface ColorSwatchProps {
 
 export function ColorSwatch({
   color,
-  name,
   size = "md",
   className,
 }: ColorSwatchProps) {
   const sizes = {
     sm: "w-6 h-6",
-    md: "w-10 h-10",
-    lg: "w-14 h-14",
+    md: "w-12 h-12",
+    lg: "w-20 h-20",
   };
 
   return (
-    <div className={cn("flex flex-col items-center gap-1", className)}>
-      <div
-        className={cn(
-          "rounded-lg border border-white/10 shadow-inner",
-          sizes[size]
-        )}
-        style={{ backgroundColor: color }}
-        title={name || color}
-      />
-      {name && <span className="text-[10px] text-muted">{name}</span>}
-    </div>
+    <div
+      className={cn(
+        "rounded-full border border-white/5",
+        sizes[size],
+        className
+      )}
+      style={{ backgroundColor: color }}
+      title={color}
+    />
   );
 }
 
