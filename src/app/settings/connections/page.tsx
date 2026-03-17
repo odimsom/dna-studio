@@ -13,6 +13,7 @@ import {
   Settings,
   Cpu,
   Key,
+  Image as ImageIcon,
 } from "lucide-react";
 
 const socialPlatforms = [
@@ -49,9 +50,36 @@ const llmProviders = [
   { id: "ollama", name: "Ollama (Local)", model: "Llama 3.1" },
 ];
 
+const imageProviders = [
+  {
+    id: "openai",
+    name: "OpenAI DALL-E 3",
+    description: "High quality, follows instructions well",
+    envKey: "OPENAI_API_KEY",
+    placeholder: "sk-...",
+  },
+  {
+    id: "stability",
+    name: "Stability AI",
+    description: "Stable Diffusion 3.5 — fast & flexible",
+    envKey: "STABILITY_API_KEY",
+    placeholder: "sk-...",
+  },
+  {
+    id: "replicate",
+    name: "Replicate (Flux)",
+    description: "Flux Schnell — open weights via Replicate",
+    envKey: "REPLICATE_API_TOKEN",
+    placeholder: "r8_...",
+  },
+];
+
 export default function SettingsPage() {
   const [selectedProvider, setSelectedProvider] = useState(
     process.env.NEXT_PUBLIC_LLM_PROVIDER || "openai"
+  );
+  const [selectedImageProvider, setSelectedImageProvider] = useState(
+    process.env.NEXT_PUBLIC_IMAGE_PROVIDER || "openai"
   );
 
   return (
@@ -144,6 +172,52 @@ export default function SettingsPage() {
                   />
                 </div>
               )}
+            </Card>
+          </section>
+
+          {/* Image Generation Provider */}
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <ImageIcon className="w-3.5 h-3.5 text-muted" />
+              <h2 className="text-sm font-medium text-muted">
+                Image Generation
+              </h2>
+            </div>
+            <Card className="space-y-4">
+              <div className="grid grid-cols-1 gap-3">
+                {imageProviders.map((provider) => (
+                  <button
+                    key={provider.id}
+                    onClick={() => setSelectedImageProvider(provider.id)}
+                    className={`p-4 rounded-lg border transition-all text-left cursor-pointer ${
+                      selectedImageProvider === provider.id
+                        ? "border-accent bg-accent-muted"
+                        : "border-border bg-surface hover:bg-card-hover"
+                    }`}
+                  >
+                    <p className="text-sm font-medium">{provider.name}</p>
+                    <p className="text-xs text-muted mt-0.5">{provider.description}</p>
+                  </button>
+                ))}
+              </div>
+
+              {imageProviders
+                .filter((p) => p.id === selectedImageProvider)
+                .map((p) => (
+                  <div key={p.id} className="pt-2 space-y-2">
+                    <Input
+                      id={`image-key-${p.id}`}
+                      label={p.envKey}
+                      type="password"
+                      placeholder={p.placeholder}
+                    />
+                    <p className="text-[10px] text-muted">
+                      Set <code className="font-mono">IMAGE_PROVIDER={p.id}</code> and{" "}
+                      <code className="font-mono">{p.envKey}</code> in your{" "}
+                      <code className="font-mono">.env</code> or Docker Compose config.
+                    </p>
+                  </div>
+                ))}
             </Card>
           </section>
         </div>

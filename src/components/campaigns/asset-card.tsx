@@ -15,6 +15,8 @@ import {
   Check,
   X,
   MoreVertical,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 
 interface AssetCardProps {
@@ -32,6 +34,7 @@ interface AssetCardProps {
   onPublish?: (id: string) => void;
   onSchedule?: (id: string, date: string) => void;
   onUpdateCaption?: (id: string, caption: string) => void;
+  onGenerateImage?: (id: string, prompt: string) => Promise<string | null>;
 }
 
 const platformIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -53,18 +56,32 @@ export function AssetCard({
   onPublish,
   onSchedule,
   onUpdateCaption,
+  onGenerateImage,
 }: AssetCardProps) {
   const [editing, setEditing] = useState(false);
   const [caption, setCaption] = useState(asset.caption);
   const [showScheduler, setShowScheduler] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
   const [showMenu, setShowMenu] = useState(false);
+  const [imageUrl, setImageUrl] = useState(asset.imageUrl);
+  const [generatingImage, setGeneratingImage] = useState(false);
 
   const Icon = platformIcons[asset.platform] || Send;
 
   const handleSaveCaption = () => {
     onUpdateCaption?.(asset.id, caption);
     setEditing(false);
+  };
+
+  const handleGenerateImage = async () => {
+    if (!asset.imagePrompt || !onGenerateImage) return;
+    setGeneratingImage(true);
+    try {
+      const url = await onGenerateImage(asset.id, asset.imagePrompt);
+      if (url) setImageUrl(url);
+    } finally {
+      setGeneratingImage(false);
+    }
   };
 
   return (
@@ -75,15 +92,25 @@ export function AssetCard({
     >
       <Card className="overflow-hidden p-0">
         {/* Visual creative area */}
-        <div className="relative aspect-[4/5] bg-gradient-to-br from-card-hover to-card flex items-center justify-center p-8">
+        <div className="relative aspect-[4/5] bg-gradient-to-br from-card-hover to-card flex items-center justify-center p-8 overflow-hidden">
+          {/* Generated image */}
+          {imageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={imageUrl}
+              alt="Generated"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+
           {/* Platform badge */}
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded bg-background/60 backdrop-blur-sm">
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded bg-background/60 backdrop-blur-sm z-10">
             <Icon className="w-3 h-3 text-foreground/70" />
             <span className="text-[10px] text-foreground/70 capitalize">{asset.platform}</span>
           </div>
 
           {/* Status */}
-          <div className="absolute top-3 right-3 flex items-center gap-1.5">
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
             <span className={`text-[10px] capitalize ${statusStyles[asset.status]}`}>
               {asset.status}
             </span>
@@ -117,11 +144,15 @@ export function AssetCard({
             )}
           </div>
 
-          {/* Caption preview as text overlay */}
-          <p className="text-center text-lg font-semibold leading-snug text-foreground/90 max-w-[90%]">
-            {caption.split("\n")[0]?.slice(0, 80)}
-            {caption.length > 80 ? "..." : ""}
-          </p>
+          {/* Content overlay */}
+          {generatingImage ? (
+            <Loader2 className="w-8 h-8 text-accent animate-spin" />
+          ) : !imageUrl ? (
+            <p className="text-center text-lg font-semibold leading-snug text-foreground/90 max-w-[90%]">
+              {caption.split("\n")[0]?.slice(0, 80)}
+              {caption.length > 80 ? "..." : ""}
+            </p>
+          ) : null}
         </div>
 
         {/* Caption + actions */}
@@ -174,6 +205,20 @@ export function AssetCard({
                 </span>
               ))}
             </div>
+          )}
+
+          {/* Generate image button */}
+          {asset.imagePrompt && !imageUrl && onGenerateImage && (
+            <Button
+              size="sm"
+              variant="secondary"
+              className="w-full mt-3"
+              onClick={handleGenerateImage}
+              disabled={generatingImage}
+            >
+              <Sparkles className="w-3 h-3" />
+              {generatingImage ? "Generating..." : "Generate Image"}
+            </Button>
           )}
 
           {showScheduler && (

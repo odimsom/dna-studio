@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -53,6 +53,8 @@ export default function CampaignPage() {
   const [campaign, setCampaign] = useState<CampaignData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
+  const [autoGenProgress, setAutoGenProgress] = useState<{ done: number; total: number } | null>(null);
+  const autoGenStarted = useRef(false);
 
   useEffect(() => {
     fetch(`/api/campaigns/${params.id}`)
@@ -60,6 +62,43 @@ export default function CampaignPage() {
       .then(setCampaign)
       .finally(() => setLoading(false));
   }, [params.id]);
+
+  // Auto-generate images for assets that have a prompt but no image yet
+  useEffect(() => {
+    if (!campaign || autoGenStarted.current) return;
+    const pending = campaign.assets.filter((a) => a.imagePrompt && !a.imageUrl);
+    if (pending.length === 0) return;
+
+    autoGenStarted.current = true;
+    setAutoGenProgress({ done: 0, total: pending.length });
+
+    (async () => {
+      for (let i = 0; i < pending.length; i++) {
+        const asset = pending[i];
+        try {
+          const res = await fetch("/api/images/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt: asset.imagePrompt, assetId: asset.id, size: "1024x1024" }),
+          });
+          if (res.ok) {
+            const { url } = await res.json();
+            if (url) {
+              setCampaign((prev) =>
+                prev
+                  ? { ...prev, assets: prev.assets.map((a) => a.id === asset.id ? { ...a, imageUrl: url } : a) }
+                  : prev
+              );
+            }
+          }
+        } catch {
+          // non-fatal, continue with next asset
+        }
+        setAutoGenProgress({ done: i + 1, total: pending.length });
+      }
+      setAutoGenProgress(null);
+    })();
+  }, [campaign?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePublish = async (assetId: string) => {
     if (!campaign) return;
@@ -95,6 +134,17 @@ export default function CampaignPage() {
     });
   };
 
+  const handleGenerateImage = async (assetId: string, prompt: string): Promise<string | null> => {
+    const res = await fetch("/api/images/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, assetId, size: "1024x1024" }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.url ?? null;
+  };
+
   if (loading) {
     return (
       <AppShell>
@@ -123,6 +173,14 @@ export default function CampaignPage() {
   return (
     <AppShell>
       <div className="max-w-5xl mx-auto">
+        {/* Auto-gen progress banner */}
+        {autoGenProgress && (
+          <div className="flex items-center gap-2 mb-6 px-4 py-2.5 rounded-lg bg-accent-muted border border-accent/20 text-sm text-accent">
+            <div className="w-3.5 h-3.5 rounded-full border-2 border-accent border-t-transparent animate-spin flex-shrink-0" />
+            Generating images… {autoGenProgress.done}/{autoGenProgress.total}
+          </div>
+        )}
+
         {/* Back link */}
         <Link
           href="/campaigns/new"
@@ -211,6 +269,7 @@ export default function CampaignPage() {
                   onPublish={handlePublish}
                   onSchedule={handleSchedule}
                   onUpdateCaption={handleUpdateCaption}
+                  onGenerateImage={handleGenerateImage}
                 />
               ))}
 

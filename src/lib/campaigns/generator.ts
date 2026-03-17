@@ -65,5 +65,6 @@ export async function* streamCampaign(
   yield* streamText(messages, {
     maxTokens: 8192,
     temperature: 0.8,
+    json: true,
   });
 }

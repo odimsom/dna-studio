@@ -49,11 +49,9 @@ export async function POST(request: Request) {
           }
 
           // Parse the completed content and save
-          const cleaned = fullContent
-            .replace(/```json\n?/g, "")
-            .replace(/```\n?/g, "")
-            .trim();
-          const generated = JSON.parse(cleaned);
+          const match = fullContent.match(/\{[\s\S]*\}/);
+          if (!match) throw new Error("LLM did not return valid JSON for campaign");
+          const generated = JSON.parse(match[0]);
 
           const campaign = await prisma.campaign.create({
             data: {
