@@ -11,6 +11,9 @@ import {
   Wand2,
   Download,
   Loader2,
+  Upload,
+  X,
+  ImageIcon,
 } from "lucide-react";
 
 const templates = [
@@ -38,6 +41,18 @@ const templates = [
     description: "Clean, simple composition with solid background",
     promptSuffix: "minimalist product photography, solid color background, clean composition, elegant simplicity",
   },
+  {
+    id: "product-model",
+    name: "On Model",
+    description: "Product worn or held by a model in studio setting",
+    promptSuffix: "fashion photography, model wearing/holding the product, studio setting, professional lighting, clean background",
+  },
+  {
+    id: "product-contextual",
+    name: "In Context",
+    description: "Product placed in its natural usage environment",
+    promptSuffix: "contextual product photography, product in use, natural environment, storytelling composition, warm tones",
+  },
 ];
 
 const aspectRatios = [
@@ -63,13 +78,29 @@ async function generateImage(prompt: string, size: "1024x1024" | "1024x1792" | "
   return data.url as string;
 }
 
+async function describeImage(imageUrl: string): Promise<string> {
+  const res = await fetch("/api/images/describe", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ imageUrl }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || "Failed to analyze image");
+  }
+  const data = await res.json();
+  return data.description as string;
+}
+
 export default function PhotoshootPage() {
   // Product photoshoot state
   const [productDescription, setProductDescription] = useState("");
+  const [productImage, setProductImage] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [productResult, setProductResult] = useState<string | null>(null);
   const [productLoading, setProductLoading] = useState(false);
   const [productError, setProductError] = useState("");
+  const [productStatus, setProductStatus] = useState("");
 
   // Free-form generation state
   const [prompt, setPrompt] = useState("");
@@ -79,23 +110,46 @@ export default function PhotoshootPage() {
   const [freeLoading, setFreeLoading] = useState(false);
   const [freeError, setFreeError] = useState("");
 
+  const handleProductImageUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => setProductImage(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   const handleProductGenerate = async () => {
-    if (!productDescription || !selectedTemplate) return;
+    if (!selectedTemplate) return;
+    if (!productDescription && !productImage) return;
+
     const template = templates.find((t) => t.id === selectedTemplate);
     if (!template) return;
 
     setProductLoading(true);
     setProductError("");
     setProductResult(null);
+    setProductStatus("");
 
     try {
-      const fullPrompt = `Professional product photography of ${productDescription}. ${template.promptSuffix}. High quality, commercial photography, no text.`;
+      let description = productDescription;
+
+      // If product image uploaded, analyze it with vision AI
+      if (productImage) {
+        setProductStatus("Analyzing your product...");
+        const aiDescription = await describeImage(productImage);
+        // Combine user description with AI analysis
+        description = productDescription
+          ? `${productDescription}. AI analysis: ${aiDescription}`
+          : aiDescription;
+      }
+
+      setProductStatus("Generating photoshoot...");
+      const fullPrompt = `Professional product photography of ${description}. ${template.promptSuffix}. High quality, commercial photography, no text or watermarks.`;
       const url = await generateImage(fullPrompt, "1024x1024");
       setProductResult(url);
     } catch (e) {
       setProductError(e instanceof Error ? e.message : "Generation failed");
     } finally {
       setProductLoading(false);
+      setProductStatus("");
     }
   };
 
@@ -131,7 +185,7 @@ export default function PhotoshootPage() {
             Photoshoot
           </h1>
           <p className="text-sm text-muted max-w-md mx-auto">
-            Generate professional product shots or create any image with AI.
+            Upload your product or describe it to generate professional shots with AI.
           </p>
         </div>
 
@@ -140,7 +194,7 @@ export default function PhotoshootPage() {
           <div>
             <h2 className="text-sm font-medium mb-2">Product Photoshoot</h2>
             <p className="text-xs text-muted mb-4">
-              Describe your product and choose a style to generate professional shots
+              Upload a product image or describe it, then choose a style
             </p>
 
             <Card className="p-0 overflow-hidden">
@@ -156,7 +210,7 @@ export default function PhotoshootPage() {
                       className="flex flex-col items-center gap-3"
                     >
                       <Loader2 className="w-8 h-8 text-accent animate-spin" />
-                      <p className="text-xs text-muted">Generating...</p>
+                      <p className="text-xs text-muted">{productStatus || "Generating..."}</p>
                     </motion.div>
                   ) : productResult ? (
                     <motion.div
@@ -193,29 +247,87 @@ export default function PhotoshootPage() {
 
               {/* Controls */}
               <div className="p-4 space-y-3">
+                {/* Product image upload */}
+                <div>
+                  <p className="text-xs text-muted mb-2">
+                    Product image <span className="text-muted/50">(upload your product for AI mockups)</span>
+                  </p>
+                  {productImage ? (
+                    <div className="flex items-start gap-3">
+                      <div className="relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={productImage}
+                          alt="Product"
+                          className="h-20 w-20 rounded-lg border border-border object-cover"
+                        />
+                        <button
+                          onClick={() => setProductImage(null)}
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-card border border-border flex items-center justify-center hover:bg-card-hover cursor-pointer"
+                        >
+                          <X className="w-3 h-3 text-muted" />
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-muted/60 pt-1">
+                        AI will analyze your product and generate professional shots in the selected style
+                      </p>
+                    </div>
+                  ) : (
+                    <label className="flex items-center justify-center gap-2 px-4 py-6 rounded-lg border border-dashed border-border hover:border-accent/30 text-xs text-muted hover:text-foreground transition-colors cursor-pointer bg-surface/50">
+                      <div className="flex flex-col items-center gap-2">
+                        <Upload className="w-5 h-5" />
+                        <span>Upload product photo</span>
+                        <span className="text-[10px] text-muted/50">PNG, JPG up to 10MB</span>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleProductImageUpload(file);
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* Divider with "or" */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-[10px] text-muted/50 uppercase tracking-wider">
+                    {productImage ? "add details" : "or describe it"}
+                  </span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
+
                 <textarea
                   value={productDescription}
                   onChange={(e) => setProductDescription(e.target.value)}
-                  placeholder="Describe your product (e.g. white ceramic coffee mug with minimal design)"
+                  placeholder={
+                    productImage
+                      ? "Add any extra details (optional — AI already sees your product)"
+                      : "Describe your product (e.g. white ceramic coffee mug with minimal design)"
+                  }
                   className="w-full bg-surface border border-border rounded-lg p-3 text-sm text-foreground placeholder:text-muted/30 resize-none focus:outline-none focus:border-accent/30"
                   rows={2}
                 />
 
                 <div>
                   <p className="text-xs text-muted mb-2">Select a style</p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {templates.map((template) => (
                       <button
                         key={template.id}
                         onClick={() => setSelectedTemplate(template.id)}
-                        className={`text-left p-3 rounded-lg border transition-all cursor-pointer ${
+                        className={`text-left p-2.5 rounded-lg border transition-all cursor-pointer ${
                           selectedTemplate === template.id
                             ? "border-accent bg-accent-muted"
                             : "border-border hover:border-accent/20 hover:bg-card-hover"
                         }`}
                       >
                         <p className="text-xs font-medium">{template.name}</p>
-                        <p className="text-[10px] text-muted mt-0.5">{template.description}</p>
+                        <p className="text-[10px] text-muted mt-0.5 line-clamp-1">{template.description}</p>
                       </button>
                     ))}
                   </div>
@@ -227,7 +339,7 @@ export default function PhotoshootPage() {
 
                 <Button
                   className="w-full"
-                  disabled={!selectedTemplate || !productDescription || productLoading}
+                  disabled={!selectedTemplate || (!productDescription && !productImage) || productLoading}
                   onClick={handleProductGenerate}
                 >
                   {productLoading ? (
@@ -235,7 +347,7 @@ export default function PhotoshootPage() {
                   ) : (
                     <Sparkles className="w-3.5 h-3.5" />
                   )}
-                  {productLoading ? "Generating..." : "Generate Photoshoot"}
+                  {productLoading ? (productStatus || "Generating...") : productImage ? "Generate from Product" : "Generate Photoshoot"}
                 </Button>
               </div>
             </Card>

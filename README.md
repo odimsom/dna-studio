@@ -32,7 +32,7 @@ DNA Studio analyzes any website URL to extract a **Brand DNA** profile — color
 **Paste a URL. Get a complete marketing campaign. Publish it.**
 
 <!-- Demo GIF placeholder: Record a screen capture of the Brand DNA extraction flow -->
-<!-- ![DNA Studio Demo](public/demo.gif) -->
+![DNA Studio Demo](public/demo.gif)
 
 ## Features
 
