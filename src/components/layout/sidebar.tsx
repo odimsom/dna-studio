@@ -105,7 +105,7 @@ export function Sidebar() {
                 <div
                   className="w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold flex-shrink-0"
                   style={{
-                    backgroundColor: activeBrand.colors[0] || "#C9A96E",
+                    backgroundColor: activeBrand.colors?.[0] || "#C9A96E",
                     color: "#111",
                   }}
                 >
@@ -154,7 +154,7 @@ export function Sidebar() {
                   <div
                     className="w-5 h-5 rounded flex items-center justify-center text-[9px] font-bold flex-shrink-0"
                     style={{
-                      backgroundColor: brand.colors[0] || "#C9A96E",
+                      backgroundColor: brand.colors?.[0] || "#C9A96E",
                       color: "#111",
                     }}
                   >

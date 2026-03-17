@@ -18,8 +18,8 @@ export class ReplicateProvider implements ImageProvider {
   // Flux Schnell — fast, high quality, permissive license
   private model = process.env.REPLICATE_MODEL || "black-forest-labs/flux-schnell";
 
-  constructor() {
-    this.token = process.env.REPLICATE_API_TOKEN || "";
+  constructor(apiKey?: string) {
+    this.token = apiKey || process.env.REPLICATE_API_TOKEN || "";
     if (!this.token) throw new Error("REPLICATE_API_TOKEN is not set");
   }
 

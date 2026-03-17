@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppShell } from "@/components/layout/app-shell";
@@ -17,6 +17,7 @@ import {
   Sparkles,
   Upload,
   X,
+  RefreshCw,
 } from "lucide-react";
 
 interface Brand {
@@ -26,19 +27,18 @@ interface Brand {
   logoUrl: string | null;
 }
 
+interface Suggestion {
+  title: string;
+  description: string;
+  imagePrompt: string;
+  imageUrl?: string;
+}
+
 const platforms = [
   { id: "instagram", label: "Instagram", icon: Instagram },
   { id: "linkedin", label: "LinkedIn", icon: Linkedin },
   { id: "facebook", label: "Facebook", icon: Facebook },
   { id: "twitter", label: "X", icon: Twitter },
-];
-
-const suggestions = [
-  "Launch a new product announcement campaign",
-  "Promote a seasonal sale with urgency",
-  "Build brand awareness and grow followers",
-  "Share a customer success story",
-  "Announce a company milestone or update",
 ];
 
 export default function NewCampaignPage() {
@@ -65,6 +65,9 @@ function NewCampaignContent() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const suggestionsLoadedForBrand = useRef<string | null>(null);
 
   useEffect(() => {
     fetch("/api/brands")
@@ -78,15 +81,69 @@ function NewCampaignContent() {
       });
   }, [preselectedBrandId]);
 
+  const fetchSuggestions = useCallback(async (bId: string, refresh = false) => {
+    setSuggestionsLoading(true);
+    setSuggestions([]);
+    suggestionsLoadedForBrand.current = bId;
+
+    try {
+      const url = `/api/campaigns/suggestions?brandId=${bId}${refresh ? "&refresh=true" : ""}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to load suggestions");
+      const data: Suggestion[] = await res.json();
+      if (suggestionsLoadedForBrand.current !== bId) return;
+      setSuggestions(data);
+
+      // Generate preview images for suggestions that don't have one yet
+      data.forEach((s, i) => {
+        if (!s.imagePrompt || s.imageUrl) return;
+        fetch("/api/images/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: s.imagePrompt, size: "1024x1024" }),
+        })
+          .then((r) => r.json())
+          .then((img) => {
+            if (suggestionsLoadedForBrand.current !== bId) return;
+            setSuggestions((prev) =>
+              prev.map((item, idx) =>
+                idx === i ? { ...item, imageUrl: img.url } : item
+              )
+            );
+            // Persist the generated image URL back to the cache
+            fetch(`/api/campaigns/suggestions?brandId=${bId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ index: i, imageUrl: img.url }),
+            }).catch(() => {});
+          })
+          .catch(() => {});
+      });
+    } catch {
+      // Keep empty suggestions on error
+    } finally {
+      setSuggestionsLoading(false);
+    }
+  }, []);
+
+  // Auto-fetch suggestions when brand changes
+  useEffect(() => {
+    if (brandId && brandId !== suggestionsLoadedForBrand.current) {
+      fetchSuggestions(brandId);
+    }
+  }, [brandId, fetchSuggestions]);
+
   const togglePlatform = (id: string) => {
     setSelectedPlatforms((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
   };
 
-  const handleGenerate = useCallback(async () => {
-    if (!brandId || !goal || selectedPlatforms.length === 0) return;
+  const handleGenerate = useCallback(async (overrideGoal?: string) => {
+    const campaignGoal = overrideGoal || goal;
+    if (!brandId || !campaignGoal || selectedPlatforms.length === 0) return;
 
+    setGoal(campaignGoal);
     setGenerating(true);
     setError("");
 
@@ -96,7 +153,7 @@ function NewCampaignContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           brandId,
-          goal,
+          goal: campaignGoal,
           platforms: selectedPlatforms,
           language,
           referenceImageUrl: referenceImage ?? undefined,
@@ -135,7 +192,7 @@ function NewCampaignContent() {
       setError(msg);
       setGenerating(false);
     }
-  }, [brandId, goal, selectedPlatforms, language, router]);
+  }, [brandId, goal, selectedPlatforms, language, referenceImage, router]);
 
   const activeBrand = brands.find((b) => b.id === brandId);
 
@@ -212,7 +269,7 @@ function NewCampaignContent() {
                         <div
                           className="w-3.5 h-3.5 rounded-sm flex-shrink-0"
                           style={{
-                            backgroundColor: activeBrand.colors[0] || "#C9A96E",
+                            backgroundColor: activeBrand.colors?.[0] || "#C9A96E",
                           }}
                         />
                         {activeBrand.name}
@@ -238,7 +295,7 @@ function NewCampaignContent() {
 
                   <Button
                     size="sm"
-                    onClick={handleGenerate}
+                    onClick={() => handleGenerate()}
                     disabled={!brandId || !goal || selectedPlatforms.length === 0}
                   >
                     <Sparkles className="w-3 h-3" />
@@ -247,22 +304,95 @@ function NewCampaignContent() {
                 </div>
               </Card>
 
-              {/* Suggestions */}
+              {/* Suggestions based on Business DNA */}
               <div className="mb-10">
-                <h3 className="text-sm font-medium text-muted mb-4">
-                  Suggestions based on Business DNA
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {suggestions.map((suggestion) => (
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-medium text-muted">
+                    Suggestions based on Business DNA
+                  </h3>
+                  {!suggestionsLoading && suggestions.length > 0 && (
                     <button
-                      key={suggestion}
-                      onClick={() => setGoal(suggestion)}
-                      className="text-left px-4 py-3 rounded-lg border border-border bg-card hover:bg-card-hover hover:border-accent/20 transition-all text-sm text-foreground/70 cursor-pointer"
+                      onClick={() => brandId && fetchSuggestions(brandId, true)}
+                      className="flex items-center gap-1.5 text-xs text-muted hover:text-accent transition-colors cursor-pointer"
                     >
-                      {suggestion}
+                      <RefreshCw className="w-3 h-3" />
+                      Refresh
                     </button>
-                  ))}
+                  )}
                 </div>
+
+                {suggestionsLoading ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[...Array(4)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="rounded-xl overflow-hidden border border-border/50"
+                      >
+                        <div
+                          className="aspect-[16/10] bg-card animate-pulse"
+                          style={{ animationDelay: `${i * 100}ms` }}
+                        />
+                        <div className="p-4 space-y-2">
+                          <div
+                            className="h-3 bg-card-hover rounded animate-pulse w-3/4"
+                            style={{ animationDelay: `${i * 100 + 50}ms` }}
+                          />
+                          <div
+                            className="h-2.5 bg-card-hover rounded animate-pulse w-full"
+                            style={{ animationDelay: `${i * 100 + 80}ms` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : suggestions.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {suggestions.map((suggestion, i) => (
+                      <motion.button
+                        key={suggestion.title}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.08 }}
+                        onClick={() => handleGenerate(suggestion.title + ": " + suggestion.description)}
+                        className="text-left rounded-xl overflow-hidden border border-border bg-card hover:bg-card-hover hover:border-accent/20 transition-all cursor-pointer group"
+                      >
+                        {/* Image area */}
+                        <div className="aspect-[16/10] bg-surface relative overflow-hidden">
+                          {suggestion.imageUrl ? (
+                            <img
+                              src={suggestion.imageUrl}
+                              alt={suggestion.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Loader2 className="w-5 h-5 text-muted/30 animate-spin" />
+                            </div>
+                          )}
+                          {/* Gradient overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                          {/* Title on image */}
+                          <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <h4 className="text-sm font-medium text-white leading-snug drop-shadow-lg">
+                              {suggestion.title}
+                            </h4>
+                          </div>
+                        </div>
+                        <div className="px-4 py-3">
+                          <p className="text-xs text-muted leading-relaxed line-clamp-2">
+                            {suggestion.description}
+                          </p>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                ) : (
+                  !brandId && (
+                    <p className="text-xs text-muted/50">
+                      Select a brand to see personalized suggestions.
+                    </p>
+                  )
+                )}
               </div>
 
               {/* Settings row */}

@@ -4,8 +4,8 @@ import type { ImageProvider, ImageGenerateOptions, ImageGenerateResult } from ".
 export class OpenAIImageProvider implements ImageProvider {
   private client: OpenAI;
 
-  constructor() {
-    this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  constructor(apiKey?: string) {
+    this.client = new OpenAI({ apiKey: apiKey || process.env.OPENAI_API_KEY });
   }
 
   async generate(prompt: string, options?: ImageGenerateOptions): Promise<ImageGenerateResult> {

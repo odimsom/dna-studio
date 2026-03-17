@@ -11,11 +11,11 @@ export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;
   private model: string;
 
-  constructor() {
+  constructor(apiKey?: string, model?: string) {
     this.client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: apiKey || process.env.OPENAI_API_KEY,
     });
-    this.model = process.env.OPENAI_MODEL || "gpt-4o";
+    this.model = model || process.env.OPENAI_MODEL || "gpt-4o";
   }
 
   async generate(

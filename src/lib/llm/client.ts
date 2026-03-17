@@ -33,41 +33,57 @@ export interface LLMOptions {
 export type ProviderType = "openai" | "anthropic" | "ollama" | "gemini";
 
 let cachedProvider: LLMProvider | null = null;
-let cachedProviderType: string | null = null;
+let cachedCacheKey: string | null = null;
 
 export async function getLLMProvider(): Promise<LLMProvider> {
-  const providerType = process.env.LLM_PROVIDER || "openai";
+  // Try to resolve from user settings, fall back to env vars
+  let providerType: string;
+  let apiKey: string | undefined;
+  let model: string | undefined;
+  let ollamaUrl: string | undefined;
 
-  if (cachedProvider && cachedProviderType === providerType) {
+  try {
+    const { resolveSettings } = await import("@/lib/settings/resolve");
+    const settings = await resolveSettings();
+    providerType = settings.llmProvider;
+    apiKey = settings.llmApiKey || undefined;
+    model = settings.llmModel || undefined;
+    ollamaUrl = settings.ollamaUrl || undefined;
+  } catch {
+    providerType = process.env.LLM_PROVIDER || "openai";
+  }
+
+  const cacheKey = `${providerType}:${apiKey || "env"}:${model || "default"}`;
+  if (cachedProvider && cachedCacheKey === cacheKey) {
     return cachedProvider;
   }
 
   switch (providerType) {
     case "openai": {
       const { OpenAIProvider } = await import("./providers/openai");
-      cachedProvider = new OpenAIProvider();
+      cachedProvider = new OpenAIProvider(apiKey, model);
       break;
     }
     case "anthropic": {
       const { AnthropicProvider } = await import("./providers/anthropic");
-      cachedProvider = new AnthropicProvider();
+      cachedProvider = new AnthropicProvider(apiKey, model);
       break;
     }
     case "ollama": {
       const { OllamaProvider } = await import("./providers/ollama");
-      cachedProvider = new OllamaProvider();
+      cachedProvider = new OllamaProvider(ollamaUrl, model);
       break;
     }
     case "gemini": {
       const { GeminiProvider } = await import("./providers/gemini");
-      cachedProvider = new GeminiProvider();
+      cachedProvider = new GeminiProvider(apiKey, model);
       break;
     }
     default:
       throw new Error(`Unknown LLM provider: ${providerType}`);
   }
 
-  cachedProviderType = providerType;
+  cachedCacheKey = cacheKey;
   return cachedProvider!;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,25 @@ import {
   Facebook,
   Twitter,
   Settings,
-  Cpu,
-  Key,
   Image as ImageIcon,
+  Check,
+  Loader2,
 } from "lucide-react";
+
+interface SocialConnection {
+  id: string;
+  platform: string;
+  accountName: string;
+}
+
+interface UserSettings {
+  llmProvider?: string;
+  llmApiKey?: string;
+  llmModel?: string;
+  ollamaUrl?: string;
+  imageProvider?: string;
+  imageApiKey?: string;
+}
 
 const socialPlatforms = [
   {
@@ -44,10 +59,10 @@ const socialPlatforms = [
 ];
 
 const llmProviders = [
-  { id: "openai", name: "OpenAI", model: "GPT-4o" },
-  { id: "anthropic", name: "Anthropic", model: "Claude Sonnet" },
-  { id: "gemini", name: "Google Gemini", model: "Gemini 1.5 Pro" },
-  { id: "ollama", name: "Ollama (Local)", model: "Llama 3.1" },
+  { id: "openai", name: "OpenAI", model: "GPT-4o", keyPlaceholder: "sk-...", keyLabel: "OpenAI API Key" },
+  { id: "anthropic", name: "Anthropic", model: "Claude Sonnet", keyPlaceholder: "sk-ant-...", keyLabel: "Anthropic API Key" },
+  { id: "gemini", name: "Google Gemini", model: "Gemini 2.0 Flash", keyPlaceholder: "AIza...", keyLabel: "Google API Key" },
+  { id: "ollama", name: "Ollama (Local)", model: "Llama 3.1", keyPlaceholder: "", keyLabel: "" },
 ];
 
 const imageProviders = [
@@ -55,32 +70,89 @@ const imageProviders = [
     id: "openai",
     name: "OpenAI DALL-E 3",
     description: "High quality, follows instructions well",
-    envKey: "OPENAI_API_KEY",
-    placeholder: "sk-...",
+    keyPlaceholder: "sk-...",
+    keyLabel: "OpenAI API Key (shared with LLM if same)",
   },
   {
     id: "stability",
     name: "Stability AI",
     description: "Stable Diffusion 3.5 — fast & flexible",
-    envKey: "STABILITY_API_KEY",
-    placeholder: "sk-...",
+    keyPlaceholder: "sk-...",
+    keyLabel: "Stability API Key",
   },
   {
     id: "replicate",
     name: "Replicate (Flux)",
     description: "Flux Schnell — open weights via Replicate",
-    envKey: "REPLICATE_API_TOKEN",
-    placeholder: "r8_...",
+    keyPlaceholder: "r8_...",
+    keyLabel: "Replicate API Token",
   },
 ];
 
 export default function SettingsPage() {
-  const [selectedProvider, setSelectedProvider] = useState(
-    process.env.NEXT_PUBLIC_LLM_PROVIDER || "openai"
-  );
-  const [selectedImageProvider, setSelectedImageProvider] = useState(
-    process.env.NEXT_PUBLIC_IMAGE_PROVIDER || "openai"
-  );
+  const [settings, setSettings] = useState<UserSettings>({});
+  const [connections, setConnections] = useState<SocialConnection[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Load settings and connections on mount
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/settings").then((r) => r.ok ? r.json() : {}),
+      fetch("/api/settings/connections").then((r) => r.ok ? r.json() : []),
+    ]).then(([s, c]) => {
+      setSettings(s);
+      setConnections(Array.isArray(c) ? c : []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  const updateSetting = useCallback((key: keyof UserSettings, value: string) => {
+    setSettings((prev) => ({ ...prev, [key]: value }));
+    setSaved(false);
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }
+    } catch {
+      // Error saving
+    } finally {
+      setSaving(false);
+    }
+  }, [settings]);
+
+  const handleDisconnect = useCallback(async (connectionId: string) => {
+    const res = await fetch(`/api/settings/connections/${connectionId}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      setConnections((prev) => prev.filter((c) => c.id !== connectionId));
+    }
+  }, []);
+
+  const selectedProvider = settings.llmProvider || "openai";
+  const selectedImageProvider = settings.imageProvider || "openai";
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-5 h-5 text-accent animate-spin" />
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -103,23 +175,42 @@ export default function SettingsPage() {
               Social Connections
             </h2>
             <div className="space-y-3">
-              {socialPlatforms.map((platform) => (
-                <Card
-                  key={platform.id}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-4">
-                    <platform.icon className="w-5 h-5 text-muted" />
-                    <div>
-                      <h3 className="text-sm font-medium">{platform.name}</h3>
-                      <p className="text-xs text-muted">{platform.description}</p>
+              {socialPlatforms.map((platform) => {
+                const connection = connections.find(
+                  (c) => c.platform === platform.id
+                );
+                return (
+                  <Card
+                    key={platform.id}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-4">
+                      <platform.icon className="w-5 h-5 text-muted" />
+                      <div>
+                        <h3 className="text-sm font-medium">{platform.name}</h3>
+                        <p className="text-xs text-muted">
+                          {connection
+                            ? `Connected as ${connection.accountName}`
+                            : platform.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <Button size="sm" variant="secondary">
-                    Connect
-                  </Button>
-                </Card>
-              ))}
+                    {connection ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleDisconnect(connection.id)}
+                      >
+                        Disconnect
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="secondary" disabled>
+                        Coming Soon
+                      </Button>
+                    )}
+                  </Card>
+                );
+              })}
             </div>
           </section>
 
@@ -133,7 +224,7 @@ export default function SettingsPage() {
                 {llmProviders.map((provider) => (
                   <button
                     key={provider.id}
-                    onClick={() => setSelectedProvider(provider.id)}
+                    onClick={() => updateSetting("llmProvider", provider.id)}
                     className={`p-4 rounded-lg border transition-all text-left cursor-pointer ${
                       selectedProvider === provider.id
                         ? "border-accent bg-accent-muted"
@@ -150,13 +241,21 @@ export default function SettingsPage() {
                 <div className="pt-2">
                   <Input
                     id="api-key"
-                    label="API Key"
+                    label={
+                      llmProviders.find((p) => p.id === selectedProvider)
+                        ?.keyLabel || "API Key"
+                    }
                     type="password"
-                    placeholder="sk-..."
+                    placeholder={
+                      llmProviders.find((p) => p.id === selectedProvider)
+                        ?.keyPlaceholder || "sk-..."
+                    }
+                    value={settings.llmApiKey || ""}
+                    onChange={(e) => updateSetting("llmApiKey", e.target.value)}
                   />
                   <p className="text-[10px] text-muted mt-2">
-                    API keys are stored in your environment variables. Update your
-                    .env file or Docker compose configuration.
+                    Keys saved here override environment variables. Leave blank to use
+                    your <code className="font-mono">.env</code> config.
                   </p>
                 </div>
               )}
@@ -168,7 +267,8 @@ export default function SettingsPage() {
                     label="Ollama URL"
                     type="url"
                     placeholder="http://localhost:11434"
-                    defaultValue="http://localhost:11434"
+                    value={settings.ollamaUrl || ""}
+                    onChange={(e) => updateSetting("ollamaUrl", e.target.value)}
                   />
                 </div>
               )}
@@ -188,7 +288,9 @@ export default function SettingsPage() {
                 {imageProviders.map((provider) => (
                   <button
                     key={provider.id}
-                    onClick={() => setSelectedImageProvider(provider.id)}
+                    onClick={() =>
+                      updateSetting("imageProvider", provider.id)
+                    }
                     className={`p-4 rounded-lg border transition-all text-left cursor-pointer ${
                       selectedImageProvider === provider.id
                         ? "border-accent bg-accent-muted"
@@ -196,7 +298,9 @@ export default function SettingsPage() {
                     }`}
                   >
                     <p className="text-sm font-medium">{provider.name}</p>
-                    <p className="text-xs text-muted mt-0.5">{provider.description}</p>
+                    <p className="text-xs text-muted mt-0.5">
+                      {provider.description}
+                    </p>
                   </button>
                 ))}
               </div>
@@ -204,22 +308,36 @@ export default function SettingsPage() {
               {imageProviders
                 .filter((p) => p.id === selectedImageProvider)
                 .map((p) => (
-                  <div key={p.id} className="pt-2 space-y-2">
+                  <div key={p.id} className="pt-2">
                     <Input
                       id={`image-key-${p.id}`}
-                      label={p.envKey}
+                      label={p.keyLabel}
                       type="password"
-                      placeholder={p.placeholder}
+                      placeholder={p.keyPlaceholder}
+                      value={settings.imageApiKey || ""}
+                      onChange={(e) =>
+                        updateSetting("imageApiKey", e.target.value)
+                      }
                     />
-                    <p className="text-[10px] text-muted">
-                      Set <code className="font-mono">IMAGE_PROVIDER={p.id}</code> and{" "}
-                      <code className="font-mono">{p.envKey}</code> in your{" "}
-                      <code className="font-mono">.env</code> or Docker Compose config.
+                    <p className="text-[10px] text-muted mt-2">
+                      Leave blank to use environment variable fallback.
                     </p>
                   </div>
                 ))}
             </Card>
           </section>
+
+          {/* Save button */}
+          <div className="flex justify-end pb-8">
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : saved ? (
+                <Check className="w-3.5 h-3.5" />
+              ) : null}
+              {saved ? "Saved" : "Save Settings"}
+            </Button>
+          </div>
         </div>
       </div>
     </AppShell>

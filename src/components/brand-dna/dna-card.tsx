@@ -35,7 +35,7 @@ export function BrandCard({ brand }: BrandCardProps) {
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold"
                 style={{
-                  backgroundColor: brand.colors[0] || "#C9A96E",
+                  backgroundColor: brand.colors?.[0] || "#C9A96E",
                   color: "#111",
                 }}
               >

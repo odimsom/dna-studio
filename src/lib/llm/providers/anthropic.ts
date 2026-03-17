@@ -11,11 +11,11 @@ export class AnthropicProvider implements LLMProvider {
   private client: Anthropic;
   private model: string;
 
-  constructor() {
+  constructor(apiKey?: string, model?: string) {
     this.client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+      apiKey: apiKey || process.env.ANTHROPIC_API_KEY,
     });
-    this.model = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001";
+    this.model = model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
   }
 
   async generate(

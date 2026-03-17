@@ -9,8 +9,8 @@ const ASPECT_RATIO: Record<string, string> = {
 export class StabilityProvider implements ImageProvider {
   private apiKey: string;
 
-  constructor() {
-    this.apiKey = process.env.STABILITY_API_KEY || "";
+  constructor(apiKey?: string) {
+    this.apiKey = apiKey || process.env.STABILITY_API_KEY || "";
     if (!this.apiKey) throw new Error("STABILITY_API_KEY is not set");
   }
 

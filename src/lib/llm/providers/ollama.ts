@@ -10,9 +10,9 @@ export class OllamaProvider implements LLMProvider {
   private baseUrl: string;
   private model: string;
 
-  constructor() {
-    this.baseUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-    this.model = process.env.OLLAMA_MODEL || "llama3.1";
+  constructor(baseUrl?: string, model?: string) {
+    this.baseUrl = baseUrl || process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+    this.model = model || process.env.OLLAMA_MODEL || "llama3.1";
   }
 
   async generate(
