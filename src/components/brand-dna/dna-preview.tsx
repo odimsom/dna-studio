@@ -52,6 +52,42 @@ export function DNAPreview({ dna }: DNAPreviewProps) {
         </div>
       </Card>
 
+      {/* Logos / Brand Assets */}
+      {(dna.favicon || dna.ogImage || (dna.logos && dna.logos.length > 0)) && (
+        <Card className="p-8">
+          <h3 className="text-sm font-medium text-muted mb-6">Brand Assets</h3>
+          <div className="flex flex-wrap gap-6 items-start">
+            {/* Favicon */}
+            {dna.favicon && (
+              <BrandAsset
+                src={dna.favicon}
+                label="Favicon"
+                containerClass="w-16 h-16"
+              />
+            )}
+
+            {/* Logo images from page */}
+            {dna.logos?.map((logo, i) => (
+              <BrandAsset
+                key={logo.url}
+                src={logo.url}
+                label={logo.alt || `Logo ${i + 1}`}
+                containerClass="w-24 h-16"
+              />
+            ))}
+
+            {/* OG image — wider preview */}
+            {dna.ogImage && (
+              <BrandAsset
+                src={dna.ogImage}
+                label="OG Image"
+                containerClass="w-48 h-24"
+              />
+            )}
+          </div>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Colors */}
         <Card className="p-8">
@@ -165,6 +201,35 @@ export function DNAPreview({ dna }: DNAPreviewProps) {
         </div>
       </Card>
     </motion.div>
+  );
+}
+
+function BrandAsset({
+  src,
+  label,
+  containerClass,
+}: {
+  src: string;
+  label: string;
+  containerClass: string;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div
+        className={`${containerClass} rounded-lg border border-border bg-white flex items-center justify-center p-2 overflow-hidden`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={label}
+          className="max-w-full max-h-full object-contain"
+          onError={(e) => {
+            (e.currentTarget.closest(".rounded-lg") as HTMLElement).style.display = "none";
+          }}
+        />
+      </div>
+      <span className="text-[11px] text-muted/60">{label}</span>
+    </div>
   );
 }
 

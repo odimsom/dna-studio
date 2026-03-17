@@ -27,6 +27,7 @@ function NewBrandContent() {
   const initialUrl = searchParams.get("url") || "";
 
   const [url, setUrl] = useState(initialUrl);
+  const [normalisedUrl, setNormalisedUrl] = useState("");
   const [phase, setPhase] = useState<Phase>("input");
   const [steps, setSteps] = useState<CrawlProgress[]>([]);
   const [dna, setDna] = useState<BrandDNA | null>(null);
@@ -36,6 +37,10 @@ function NewBrandContent() {
   const handleAnalyze = useCallback(async () => {
     if (!url) return;
 
+    // Normalise: prepend https:// if the user typed a bare domain
+    const normalised = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    setNormalisedUrl(normalised);
+
     setPhase("analyzing");
     setSteps([]);
     setError("");
@@ -44,7 +49,7 @@ function NewBrandContent() {
       const response = await fetch("/api/brands/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: normalised }),
       });
 
       const reader = response.body?.getReader();
@@ -155,7 +160,7 @@ function NewBrandContent() {
                 <h1 className="text-2xl font-[family-name:var(--font-heading)] italic mb-2">
                   Analyzing Brand DNA
                 </h1>
-                <p className="text-xs text-muted">{url}</p>
+                <p className="text-xs text-muted">{normalisedUrl}</p>
               </div>
 
               <Card className="p-8">

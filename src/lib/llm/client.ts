@@ -94,10 +94,17 @@ export async function generateJSON<T>(
   messages: LLMMessage[],
   options?: LLMOptions
 ): Promise<T> {
-  const content = await generateText(messages, { ...options, json: true });
-  const cleaned = content
-    .replace(/```json\n?/g, "")
-    .replace(/```\n?/g, "")
-    .trim();
-  return JSON.parse(cleaned) as T;
+  const content = await generateText(messages, {
+    ...options,
+    json: true,
+    temperature: options?.temperature ?? 0,
+  });
+  // Extract the first JSON object from the response regardless of surrounding text
+  const match = content.match(/\{[\s\S]*\}/);
+  if (!match) {
+    throw new Error(
+      `LLM did not return valid JSON. Response: ${content.slice(0, 300)}`
+    );
+  }
+  return JSON.parse(match[0]) as T;
 }

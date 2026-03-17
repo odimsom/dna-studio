@@ -2,7 +2,7 @@ import { chromium, type Browser, type Page } from "playwright";
 import { extractColorsFromCSS } from "./color-extractor";
 import { extractFonts } from "./font-extractor";
 import { generateJSON } from "../llm/client";
-import type { BrandDNA, ToneProfile, AudienceProfile, CrawlProgress } from "./types";
+import type { BrandDNA, LogoInfo, ToneProfile, AudienceProfile, CrawlProgress } from "./types";
 
 export type ProgressCallback = (progress: CrawlProgress) => void;
 
@@ -84,7 +84,12 @@ export async function crawlBrandDNA(
     const fontInfos = extractFonts(fontData);
     progress("Extracting fonts", "done", `Found ${fontInfos.length} fonts`);
 
-    // Step 5: Extract page text
+    // Step 5: Extract logos
+    progress("Extracting logos", "running");
+    const logoInfos = await extractLogos(page);
+    progress("Extracting logos", "done", `Found ${logoInfos.length} logos`);
+
+    // Step 6: Extract page text
     progress("Extracting content", "running");
     const pageText = await page.evaluate(() => {
       const walker = document.createTreeWalker(
@@ -104,15 +109,21 @@ export async function crawlBrandDNA(
     });
     progress("Extracting content", "done");
 
-    // Step 6: Analyze tone and audience with LLM
+    // Step 7: Analyze tone and audience with LLM
     progress("Analyzing tone", "running");
+    let analysisError: string | undefined;
     const analysis = await analyzeBrandWithLLM(
       meta.name,
       meta.description,
       pageText,
-      url
+      url,
+      (err) => { analysisError = err; }
     );
-    progress("Analyzing tone", "done");
+    progress(
+      "Analyzing tone",
+      analysisError ? "error" : "done",
+      analysisError ? `LLM failed: ${analysisError} — using fallback` : undefined
+    );
 
     progress("Complete", "done");
 
@@ -121,6 +132,9 @@ export async function crawlBrandDNA(
       tagline: meta.description || "",
       url,
       logoUrl: meta.logoUrl,
+      favicon: meta.favicon,
+      ogImage: meta.ogImage,
+      logos: logoInfos,
       colors: colorInfos,
       fonts: fontInfos,
       tone: analysis.tone,
@@ -135,12 +149,59 @@ export async function crawlBrandDNA(
   }
 }
 
+async function extractLogos(page: Page): Promise<LogoInfo[]> {
+  return page.evaluate(() => {
+    const results: { url: string; alt: string; width: number; height: number }[] = [];
+    const seen = new Set<string>();
+
+    const imgs = Array.from(document.querySelectorAll("img"));
+    for (const img of imgs) {
+      const src = img.src || img.getAttribute("src") || "";
+      if (!src || !src.startsWith("http")) continue;
+
+      const alt = (img.alt || "").toLowerCase();
+      const src2 = src.toLowerCase();
+      const classes = (img.className || "").toLowerCase();
+      const id = (img.id || "").toLowerCase();
+      const parent = (img.closest("[class]") as HTMLElement)?.className?.toLowerCase() || "";
+
+      const isLogo =
+        alt.includes("logo") ||
+        src2.includes("logo") ||
+        classes.includes("logo") ||
+        id.includes("logo") ||
+        parent.includes("logo") ||
+        parent.includes("brand") ||
+        parent.includes("header");
+
+      if (isLogo && !seen.has(src)) {
+        seen.add(src);
+        results.push({
+          url: src,
+          alt: img.alt || "Logo",
+          width: img.naturalWidth || img.width || 0,
+          height: img.naturalHeight || img.height || 0,
+        });
+        if (results.length >= 6) break;
+      }
+    }
+
+    return results;
+  });
+}
+
 async function extractMetaData(page: Page) {
   return page.evaluate(() => {
     const getMeta = (name: string) =>
       document
         .querySelector(`meta[property="${name}"], meta[name="${name}"]`)
         ?.getAttribute("content") || "";
+
+    const toAbsolute = (href: string) => {
+      if (!href) return "";
+      if (href.startsWith("http")) return href;
+      return new URL(href, window.location.origin).href;
+    };
 
     const name =
       getMeta("og:site_name") ||
@@ -154,32 +215,62 @@ async function extractMetaData(page: Page) {
       document.querySelector("h1")?.textContent?.trim() ||
       "";
 
-    // Find logo
-    let logoUrl =
-      getMeta("og:image") ||
-      document.querySelector('link[rel="icon"]')?.getAttribute("href") ||
-      document.querySelector('link[rel="apple-touch-icon"]')?.getAttribute("href") ||
-      "";
+    // OG image — social preview image
+    const ogImage = toAbsolute(getMeta("og:image") || getMeta("og:image:url"));
 
-    // Try to find a logo image
-    if (!logoUrl) {
-      const imgs = Array.from(document.querySelectorAll("img"));
-      const logoImg = imgs.find(
-        (img) =>
-          img.alt?.toLowerCase().includes("logo") ||
-          img.src?.toLowerCase().includes("logo") ||
-          img.className?.toLowerCase().includes("logo")
-      );
-      if (logoImg) logoUrl = logoImg.src;
-    }
+    // Favicon — prefer high-res, fall back to /favicon.ico
+    const faviconEl =
+      document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]') ||
+      document.querySelector<HTMLLinkElement>('link[rel="icon"][sizes="192x192"]') ||
+      document.querySelector<HTMLLinkElement>('link[rel="icon"][sizes="128x128"]') ||
+      document.querySelector<HTMLLinkElement>('link[rel="shortcut icon"]') ||
+      document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    const favicon = toAbsolute(
+      faviconEl?.getAttribute("href") || "/favicon.ico"
+    );
 
-    // Make relative URLs absolute
-    if (logoUrl && !logoUrl.startsWith("http")) {
-      logoUrl = new URL(logoUrl, window.location.origin).href;
-    }
+    // Logo — an actual logo img element in the page
+    let logoUrl = "";
+    const imgs = Array.from(document.querySelectorAll("img"));
+    const logoImg = imgs.find(
+      (img) =>
+        img.alt?.toLowerCase().includes("logo") ||
+        img.src?.toLowerCase().includes("logo") ||
+        img.className?.toLowerCase().includes("logo")
+    );
+    if (logoImg) logoUrl = logoImg.src;
 
-    return { name, description, logoUrl };
+    return { name, description, logoUrl: logoUrl || null, favicon: favicon || null, ogImage: ogImage || null };
   });
+}
+
+function deriveIndustryFromText(
+  name: string,
+  description: string,
+  url: string
+): { industry: string; category: string } {
+  const text = `${name} ${description} ${url}`.toLowerCase();
+
+  if (/real.?estate|propert|properties|realt|housing|apartment|villa|mortgage/.test(text))
+    return { industry: "Real Estate", category: description.toLowerCase().includes("invest") ? "Investment" : "Property Development" };
+  if (/health|medic|pharma|clinic|hospital|wellness|dental/.test(text))
+    return { industry: "Healthcare", category: "Medical Services" };
+  if (/finance|bank|invest|fund|capital|wealth|insurance|loan/.test(text))
+    return { industry: "Finance", category: "Financial Services" };
+  if (/restaurant|food|cafe|hotel|hospitality|travel|tourism/.test(text))
+    return { industry: "Hospitality", category: "Food & Beverage" };
+  if (/education|school|university|learn|training|course|academy/.test(text))
+    return { industry: "Education", category: "Learning & Development" };
+  if (/retail|shop|store|fashion|clothing|apparel|ecommerce/.test(text))
+    return { industry: "Retail", category: "Consumer Goods" };
+  if (/tech|software|saas|app|digital|platform|cloud|ai|data/.test(text))
+    return { industry: "Technology", category: "Software & Digital" };
+  if (/construct|build|architect|engineer|infrastructure/.test(text))
+    return { industry: "Construction", category: "Building & Infrastructure" };
+  if (/consult|agency|marketing|advertis|pr |public relations/.test(text))
+    return { industry: "Professional Services", category: "Consulting & Agency" };
+
+  return { industry: "Business Services", category: "General" };
 }
 
 interface BrandAnalysis {
@@ -194,7 +285,8 @@ async function analyzeBrandWithLLM(
   name: string,
   description: string,
   pageText: string,
-  url: string
+  url: string,
+  onError?: (msg: string) => void
 ): Promise<BrandAnalysis> {
   const prompt = `Analyze this brand and return a JSON object. Do not include any text outside the JSON.
 
@@ -234,27 +326,36 @@ Return this exact JSON structure:
       },
       { role: "user", content: prompt },
     ], { json: true });
-  } catch {
-    // Fallback if LLM fails
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[Brand DNA] LLM analysis failed:", msg);
+    onError?.(msg);
+    // Fallback — derive basic context from brand text
+    const { industry, category } = deriveIndustryFromText(name, description, url);
+    const domainKeywords = url
+      .replace(/https?:\/\/(www\.)?/, "")
+      .split(/[./\-_]/)[0];
     return {
       tone: {
         primary: "professional",
         secondary: "friendly",
-        description: "A professional and approachable tone.",
+        description: `${name} communicates in a professional and approachable manner.`,
         formality: 60,
         energy: 50,
         warmth: 60,
       },
       audience: {
-        primary: "General consumers",
-        secondary: "Business professionals",
+        primary: "Potential clients",
+        secondary: "Business partners",
         ageRange: "25-55",
-        interests: ["technology", "innovation"],
-        painPoints: ["efficiency", "reliability"],
+        interests: [industry.toLowerCase(), "quality", "value"],
+        painPoints: ["finding reliable partners", "quality assurance"],
       },
-      industry: "Technology",
-      category: "General",
-      keywords: [name.toLowerCase(), "brand", "business"],
+      industry,
+      category,
+      keywords: [name.toLowerCase(), domainKeywords, industry.toLowerCase(), "brand", "services"].filter(
+        (v, i, a) => a.indexOf(v) === i
+      ),
     };
   }
 }

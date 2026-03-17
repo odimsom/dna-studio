@@ -3,6 +3,9 @@ export interface BrandDNA {
   tagline: string;
   url: string;
   logoUrl: string | null;
+  favicon: string | null;
+  ogImage: string | null;
+  logos: LogoInfo[];
   colors: ColorInfo[];
   fonts: FontInfo[];
   tone: ToneProfile;
@@ -11,6 +14,13 @@ export interface BrandDNA {
   category: string;
   keywords: string[];
   rawText: string;
+}
+
+export interface LogoInfo {
+  url: string;
+  alt: string;
+  width?: number;
+  height?: number;
 }
 
 export interface ColorInfo {

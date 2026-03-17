@@ -38,11 +38,21 @@ export function Sidebar() {
       .then((data) => {
         const list = Array.isArray(data) ? data : [];
         setBrands(list);
-        if (list.length > 0 && !activeBrandId) {
+        // Only fall back to first brand if pathname doesn't already specify one
+        const match = pathname.match(/^\/brands\/([^/]+)/);
+        if (!match && list.length > 0) {
           setActiveBrandId(list[0].id);
         }
       });
-  }, [activeBrandId]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync active brand with URL
+  useEffect(() => {
+    const match = pathname.match(/^\/brands\/([^/]+)/);
+    if (match) {
+      setActiveBrandId(match[1]);
+    }
+  }, [pathname]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

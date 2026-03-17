@@ -49,13 +49,17 @@ export function AnalysisProgress({ steps }: AnalysisProgressProps) {
                     ? "text-foreground"
                     : step.status === "done"
                       ? "text-muted/60"
-                      : "text-muted/30"
+                      : step.status === "error"
+                        ? "text-danger"
+                        : "text-muted/30"
                 }`}
               >
                 {step.step}
               </p>
               {step.detail && (
-                <p className="text-[11px] text-muted/40 truncate">{step.detail}</p>
+                <p className={`text-[11px] truncate ${step.status === "error" ? "text-danger/70" : "text-muted/40"}`}>
+                  {step.detail}
+                </p>
               )}
             </div>
           </motion.div>

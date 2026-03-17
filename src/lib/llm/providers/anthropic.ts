@@ -15,7 +15,7 @@ export class AnthropicProvider implements LLMProvider {
     this.client = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
-    this.model = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-20250514";
+    this.model = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001";
   }
 
   async generate(
@@ -25,19 +25,35 @@ export class AnthropicProvider implements LLMProvider {
     const systemMsg = messages.find((m) => m.role === "system");
     const nonSystemMsgs = messages.filter((m) => m.role !== "system");
 
+    // For JSON mode, append instruction to system prompt and pre-fill assistant
+    // response with "{" to force the model to output only JSON
+    const systemContent = [
+      systemMsg?.content,
+      options?.json ? "Respond with valid JSON only. No explanation, no markdown." : null,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const assistantPrefill = options?.json ? [{ role: "assistant" as const, content: "{" }] : [];
+
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: options?.maxTokens ?? 4096,
       temperature: options?.temperature ?? 0.7,
-      ...(systemMsg && { system: systemMsg.content }),
-      messages: nonSystemMsgs.map((m) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      })),
+      ...(systemContent && { system: systemContent }),
+      messages: [
+        ...nonSystemMsgs.map((m) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        })),
+        ...assistantPrefill,
+      ],
     });
 
-    const content =
+    const raw =
       response.content[0]?.type === "text" ? response.content[0].text : "";
+    // Re-attach the prefill character we used to force JSON mode
+    const content = options?.json ? "{" + raw : raw;
 
     return {
       content,
