@@ -31,8 +31,8 @@ DNA Studio analyzes any website URL to extract a **Brand DNA** profile — color
 
 **Paste a URL. Get a complete marketing campaign. Publish it.**
 
-<!-- Demo GIF placeholder: Record a screen capture of the Brand DNA extraction flow -->
-![DNA Studio Demo](public/demo.gif)
+<!-- To add a demo GIF: upload it via a GitHub issue to get a CDN URL (max 10MB recommended) -->
+<!-- ![DNA Studio Demo](https://github.com/user-attachments/assets/YOUR-ASSET-ID) -->
 
 ## Features
 
