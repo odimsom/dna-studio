@@ -240,7 +240,7 @@ async function extractMetaData(page: Page) {
     );
     if (logoImg) logoUrl = logoImg.src;
 
-    return { name, description, logoUrl: logoUrl || null, favicon: favicon || null, ogImage: ogImage || null };
+    return { name, description, logoUrl: logoUrl || favicon || null, favicon: favicon || null, ogImage: ogImage || null };
   });
 }
 
