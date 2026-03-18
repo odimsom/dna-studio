@@ -81,6 +81,13 @@ const imageProviders = [
     keyLabel: "Stability API Key",
   },
   {
+    id: "gemini",
+    name: "Google Gemini",
+    description: "Gemini native image generation — uses your Gemini API key",
+    keyPlaceholder: "AIza...",
+    keyLabel: "Google API Key (shared with LLM if same)",
+  },
+  {
     id: "replicate",
     name: "Replicate (Flux)",
     description: "Flux Schnell — open weights via Replicate",

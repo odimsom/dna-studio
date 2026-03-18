@@ -19,6 +19,7 @@ model User {
   sessions      Session[]
   brands        Brand[]
   campaigns     Campaign[]
+  photoshoots   Photoshoot[]
   connections   SocialConnection[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -104,6 +105,19 @@ model Asset {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}
+
+model Photoshoot {
+  id                 String   @id @default(cuid())
+  userId             String
+  productImage       String?  @db.Text
+  productDescription String?  @db.Text
+  templates          String[]
+  results            Json
+  status             String   @default("generating") // generating | completed | failed
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SocialConnection {

@@ -48,6 +48,14 @@ DNA Studio analyzes any website URL to extract a **Brand DNA** profile — color
 
 - **Self-Hosted** — One `docker compose up -d` and you're running. Your data stays on your infrastructure. No vendor lock-in. MIT licensed.
 
+- **AI Photoshoot Studio** — Upload a product image, choose from 29 templates across 6 categories (General, Beauty, Fashion, Food, Home, Tech), and generate up to 4 styled product shots in parallel. Sessions are saved and browsable.
+
+- **AI Image Generation** — Supports OpenAI DALL-E, Google Gemini native image generation, Stability AI, and Replicate Flux. Provider-agnostic — switch with one setting.
+
+- **Smart Campaign Suggestions** — AI analyzes your brand DNA and generates tailored campaign ideas. Cached per brand for instant load.
+
+- **In-App Settings** — Configure AI providers, API keys, and image generation from the dashboard. No need to restart the server.
+
 - **Streaming UX** — Real-time progress for brand analysis and content generation. See results as they're produced.
 
 ## Quick Start
@@ -120,12 +128,12 @@ All configuration is done via environment variables. See [`.env.example`](.env.e
 
 ## Tech Stack
 
-- **Frontend**: Next.js 15 + TypeScript + Tailwind CSS v4 + Framer Motion
+- **Frontend**: Next.js 16 + TypeScript + Tailwind CSS v4 + Framer Motion
 - **Backend**: Next.js API Routes + Prisma ORM
 - **Database**: PostgreSQL
 - **Queue**: BullMQ + Redis
 - **Web Scraping**: Playwright (headless Chromium)
-- **AI**: Provider-agnostic (OpenAI, Anthropic, Ollama, Gemini)
+- **AI**: Provider-agnostic (OpenAI, Anthropic, Ollama, Gemini) — text + image generation
 - **Auth**: NextAuth.js (credentials + Google OAuth)
 - **Deployment**: Docker Compose
 
@@ -139,7 +147,9 @@ dna-studio/
 │   └── lib/
 │       ├── brand-dna/  # Brand DNA crawler and extractors
 │       ├── llm/        # Unified LLM client + providers
+│       ├── image/      # Image generation client + providers
 │       ├── campaigns/  # Campaign generator and prompts
+│       ├── settings/   # User settings resolution
 │       ├── social/     # Social media API integrations
 │       └── auth/       # NextAuth configuration
 ├── prisma/             # Database schema and migrations
@@ -150,27 +160,44 @@ dna-studio/
 
 ## Roadmap
 
-- [ ] Image generation integration (DALL-E 3, Stability AI)
+### Shipped in v0.1.0
+
+- [x] Brand DNA extraction from any URL (colors, fonts, tone, audience, industry)
+- [x] Multi-platform campaign generation (Instagram, LinkedIn, Facebook, X/Twitter)
+- [x] Model-agnostic LLM support (OpenAI, Anthropic, Gemini, Ollama)
+- [x] AI image generation (OpenAI DALL-E, Google Gemini, Stability AI, Replicate Flux)
+- [x] AI Photoshoot — upload a product, pick templates, generate styled shots
+- [x] Photoshoot persistence — sessions saved and browsable in gallery
+- [x] Smart campaign suggestions — AI-generated, cached per brand
+- [x] Settings UI — configure AI providers and API keys from the dashboard
+- [x] Vision-powered product analysis — AI describes uploaded product images
+- [x] Favicon-based brand logo fallback
+- [x] Docker Compose one-command deployment
+
+### Up Next
+
 - [ ] A/B testing for campaign variants
 - [ ] Analytics dashboard (post performance tracking)
-- [ ] Template library (pre-built campaign templates)
-- [ ] Team collaboration (multi-user workspaces)
-- [ ] Webhook integrations (Zapier, n8n)
 - [ ] Calendar view for scheduled posts
+- [ ] Team collaboration (multi-user workspaces)
 - [ ] Brand style guide PDF export
+- [ ] Webhook integrations (Zapier, n8n)
 - [ ] Chrome extension for one-click brand analysis
 - [ ] Mobile app (React Native)
 
 ## Contributing
 
-We welcome contributions! Here's how to get started:
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, code style guidelines, and how to add new AI providers.
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Make your changes
-4. Run linting: `npm run lint`
-5. Commit with a descriptive message
-6. Push and open a Pull Request
+Quick start:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/dna-studio.git
+cd dna-studio && npm install
+cp .env.example .env
+npx prisma migrate dev
+npm run dev
+```
 
 ### Development Tips
 

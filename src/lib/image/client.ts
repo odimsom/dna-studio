@@ -1,6 +1,6 @@
 import type { ImageProvider } from "./types";
 
-export type ImageProviderType = "openai" | "stability" | "replicate";
+export type ImageProviderType = "openai" | "stability" | "replicate" | "gemini";
 
 let cached: ImageProvider | null = null;
 let cachedKey: string | null = null;
@@ -35,6 +35,11 @@ export async function getImageProvider(): Promise<ImageProvider> {
     case "replicate": {
       const { ReplicateProvider } = await import("./providers/replicate");
       cached = new ReplicateProvider(apiKey);
+      break;
+    }
+    case "gemini": {
+      const { GeminiImageProvider } = await import("./providers/gemini");
+      cached = new GeminiImageProvider(apiKey);
       break;
     }
     default:

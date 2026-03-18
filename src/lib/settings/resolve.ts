@@ -91,6 +91,9 @@ export async function resolveSettings(): Promise<ResolvedSettings> {
       case "replicate":
         imageApiKey = process.env.REPLICATE_API_TOKEN || "";
         break;
+      case "gemini":
+        imageApiKey = process.env.GOOGLE_API_KEY || "";
+        break;
     }
   }
 
