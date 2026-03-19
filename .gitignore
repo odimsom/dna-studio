@@ -38,6 +38,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# generated UGC character preview videos (large, generated via seed script)
+public/ugc/*.mp4
+
 # vercel
 .vercel
 

@@ -20,6 +20,7 @@ model User {
   brands        Brand[]
   campaigns     Campaign[]
   photoshoots   Photoshoot[]
+  ugcVideos     UGCVideo[]
   connections   SocialConnection[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -115,6 +116,44 @@ model Photoshoot {
   templates          String[]
   results            Json
   status             String   @default("generating") // generating | completed | failed
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UGCCharacter {
+  id              String   @id @default(cuid())
+  name            String
+  description     String   @db.Text  // appearance/persona description for video generation
+  gender          String              // male | female
+  style           String              // e.g. "Friendly & Warm", "Tech-Savvy"
+  previewVideoUrl String?  @db.Text  // pre-generated preview video URL
+  thumbnailUrl    String?  @db.Text  // static thumbnail fallback
+  previewPrompt   String?  @db.Text  // the prompt used to generate the preview
+  active          Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model UGCVideo {
+  id                 String   @id @default(cuid())
+  userId             String
+  productImage       String?  @db.Text
+  productDescription String?  @db.Text
+  avatarId           String
+  avatarName         String?
+  avatarThumbnail    String?  @db.Text
+  script             String   @db.Text
+  scriptSource       String   @default("ai") // ai | custom
+  videoUrl           String?  @db.Text
+  thumbnailUrl       String?  @db.Text
+  providerVideoId    String?  // provider-side ID for polling
+  provider           String   @default("heygen") // heygen | did
+  aspectRatio        String   @default("9:16")
+  status             String   @default("generating") // generating | processing | completed | failed
+  duration           Int?     // seconds
+  errorMessage       String?  @db.Text
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)

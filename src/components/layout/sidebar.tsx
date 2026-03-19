@@ -9,6 +9,7 @@ import {
   Dna,
   Megaphone,
   Camera,
+  Video,
   Settings,
   LogOut,
   ChevronDown,
@@ -70,6 +71,7 @@ export function Sidebar() {
     { href: activeBrandId ? `/brands/${activeBrandId}` : "/dashboard", label: "Business DNA", icon: Dna },
     { href: "/campaigns/new", label: "Campaigns", icon: Megaphone },
     { href: "/photoshoot", label: "Photoshoot", icon: Camera },
+    { href: "/ugc", label: "UGC Studio", icon: Video },
     { href: "/settings/connections", label: "Settings", icon: Settings },
   ];
 

@@ -8,6 +8,8 @@ export interface ResolvedSettings {
   ollamaUrl: string;
   imageProvider: string;
   imageApiKey: string;
+  videoProvider: string;
+  videoApiKey: string;
 }
 
 interface UserSettings {
@@ -17,6 +19,8 @@ interface UserSettings {
   ollamaUrl?: string;
   imageProvider?: string;
   imageApiKey?: string;
+  videoProvider?: string;
+  videoApiKey?: string;
 }
 
 /**
@@ -97,6 +101,23 @@ export async function resolveSettings(): Promise<ResolvedSettings> {
     }
   }
 
+  const videoProvider = userSettings.videoProvider || process.env.VIDEO_PROVIDER || "veo";
+
+  let videoApiKey = userSettings.videoApiKey || "";
+  if (!videoApiKey) {
+    switch (videoProvider) {
+      case "veo":
+        videoApiKey = process.env.GOOGLE_API_KEY || "";
+        break;
+      case "heygen":
+        videoApiKey = process.env.HEYGEN_API_KEY || "";
+        break;
+      case "did":
+        videoApiKey = process.env.DID_API_KEY || "";
+        break;
+    }
+  }
+
   return {
     llmProvider,
     llmApiKey,
@@ -104,5 +125,7 @@ export async function resolveSettings(): Promise<ResolvedSettings> {
     ollamaUrl: userSettings.ollamaUrl || process.env.OLLAMA_BASE_URL || "http://localhost:11434",
     imageProvider,
     imageApiKey,
+    videoProvider,
+    videoApiKey,
   };
 }
