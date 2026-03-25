@@ -1,7 +1,8 @@
 version: '3.8'
+
 services:
   app:
-   ports:
+    ports:
       - "8190:8190"
     build:
       context: .
