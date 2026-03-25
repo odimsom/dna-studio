@@ -1,40 +1,25 @@
 version: '3.8'
-
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "5000:3000"
     environment:
       DATABASE_URL: postgresql://dnastudio:dnastudio@db:5432/dnastudio
       REDIS_URL: redis://redis:6379
-      NEXTAUTH_URL: http://localhost:3000
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-in-production}
-      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
-      GEMINI_MODEL: ${GEMINI_MODEL:-}
-      OPENAI_MODEL: ${OPENAI_MODEL:-}
-      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-}
-      IMAGE_PROVIDER: ${IMAGE_PROVIDER:-openai}
-      STABILITY_API_KEY: ${STABILITY_API_KEY:-}
-      REPLICATE_API_TOKEN: ${REPLICATE_API_TOKEN:-}
-      REPLICATE_MODEL: ${REPLICATE_MODEL:-}
-      GEMINI_IMAGE_MODEL: ${GEMINI_IMAGE_MODEL:-gemini-3.1-flash-image-preview}
-      VIDEO_PROVIDER: ${VIDEO_PROVIDER:-veo}
-      HEYGEN_API_KEY: ${HEYGEN_API_KEY:-}
-      DID_API_KEY: ${DID_API_KEY:-}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      NEXTAUTH_URL: https://adn.synsetsolutions.com
+      NEXTAUTH_SECRET: cambia-esto-por-algo-seguro
+      LLM_PROVIDER: ollama
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: qwen2.5:3b
     depends_on:
       db:
         condition: service_healthy
       redis:
+        condition: service_started
+      ollama:
         condition: service_started
     restart: unless-stopped
 
@@ -45,11 +30,9 @@ services:
     environment:
       DATABASE_URL: postgresql://dnastudio:dnastudio@db:5432/dnastudio
       REDIS_URL: redis://redis:6379
-      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      TWITTER_API_KEY: ${TWITTER_API_KEY:-}
-      TWITTER_API_SECRET: ${TWITTER_API_SECRET:-}
+      LLM_PROVIDER: ollama
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: qwen2.5:3b
     depends_on:
       db:
         condition: service_healthy
@@ -57,10 +40,14 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  ollama:
+    image: ollama/ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
   db:
     image: postgres:16-alpine
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_DB: dnastudio
       POSTGRES_USER: dnastudio
@@ -83,3 +70,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  ollama_data:
