@@ -4,8 +4,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "5000:3000"
     environment:
       DATABASE_URL: postgresql://dnastudio:dnastudio@db:5432/dnastudio
       REDIS_URL: redis://redis:6379
